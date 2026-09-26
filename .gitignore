@@ -1,0 +1,67 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# Environment variables & Sensitive Firebase credentials
+.env
+.env.local
+.env.*.local
+serviceAccountKey.json
+serviceAccountKey*.json
+firebase-credentials.json
+
+# Image Processing and Evidence Storage
+captured_images/
+*.jpg
+*.jpeg
+*.png
+!known_faces/*.jpg
+!known_faces/*.png
+!static/images/*.jpg
+!static/images/*.png
+!static/images/*.svg
+
+# Ultralytics / YOLO weights (except demo placeholders)
+*.pt
+!models/best.pt
+runs/
+
+# IDE & OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+Thumbs.db
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace

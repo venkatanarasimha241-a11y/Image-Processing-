@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Camera Monitoring - Intelligent Surveillance System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+        </div>
+        <div class="brand-title">
+          <span>AI Monitoring</span>
+          <span>Security Platform</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Navigation</div>
+        <a href="/" class="nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="#liveCameraSection" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+          </svg>
+          <span>Live Camera</span>
+        </a>
+
+        <a href="/persons" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span>Persons</span>
+        </a>
+
+        <a href="/detections" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <span>Detections</span>
+        </a>
+
+        <a href="#analyticsSection" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          <span>Analytics</span>
+        </a>
+
+        <div class="nav-section-title">System</div>
+        <a href="#" class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-status-box">
+          <div class="status-indicator-group">
+            <span class="pulse-dot"></span>
+            <span style="font-size: 0.8rem; font-weight: 700; color: #1E293B;">AI Engine</span>
+          </div>
+          <span style="font-size: 0.72rem; font-weight: 600; color: var(--success);">ONLINE</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+      <!-- TOP HEADER -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+
+          <div>
+            <h1>AI Camera Monitoring</h1>
+            <p style="font-size: 0.84rem;">Real-time intelligent surveillance and detection</p>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" placeholder="Search person, ID, or camera...">
+          </div>
+
+          <div class="live-time-badge" id="liveClock">
+            Loading time...
+          </div>
+
+          {% if user.model == "department" %}
+          <span class="badge" style="background:#EEF2FF; color:var(--primary); font-size: 0.72rem; font-weight:700;">🏛️ {{ user.department }}</span>
+          {% else %}
+          <span class="badge badge-known" style="font-size: 0.72rem;">🛡️ ADMIN CONSOLE</span>
+          {% endif %}
+
+          <button class="notification-btn" aria-label="Notifications">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="notification-badge">3</span>
+          </button>
+
+          <div class="user-profile-widget" onclick="location.href='/logout'" title="Click to logout">
+            <img class="user-avatar" src="/static/images/default_avatar.svg" alt="User avatar">
+            <div class="user-meta">
+              <span class="user-name">{{ user.name }}</span>
+              <span class="user-role">{{ user.role }}</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- PAGE BODY -->
+      <div class="page-body">
+        <!-- 4 KPI STATISTICS CARDS -->
+        <section class="kpi-grid">
+          <!-- Card 1: Total Detections -->
+          <div class="card kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-title">Total Detections</span>
+              <div class="kpi-icon-wrap kpi-icon-indigo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-value animate-counter" id="kpiTotalDetections" data-target="{{ stats.total_detections }}">
+              {{ "{:,}".format(stats.total_detections) }}
+            </div>
+            <div class="kpi-footer">
+              <span class="trend-badge up">↑ {{ stats.recent_trend }}</span>
+              <span style="color: var(--text-muted);">vs yesterday</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Known Persons -->
+          <div class="card kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-title">Known Persons</span>
+              <div class="kpi-icon-wrap kpi-icon-emerald">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <polyline points="17 11 19 13 23 9"></polyline>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-value animate-counter" id="kpiKnownPersons" data-target="{{ stats.known_persons }}">
+              {{ "{:,}".format(stats.known_persons) }}
+            </div>
+            <div class="kpi-footer">
+              <span class="trend-badge up">Verified</span>
+              <span style="color: var(--text-muted);">Registered in DB</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Unknown Persons -->
+          <div class="card kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-title">Unknown Persons</span>
+              <div class="kpi-icon-wrap kpi-icon-rose">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-value animate-counter" id="kpiUnknownPersons" data-target="{{ stats.unknown_persons }}">
+              {{ "{:,}".format(stats.unknown_persons) }}
+            </div>
+            <div class="kpi-footer">
+              <span class="trend-badge neutral">Security Alerts</span>
+              <span style="color: var(--text-muted);">Auto-flagged</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Active Cameras -->
+          <div class="card kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-title">Active Cameras</span>
+              <div class="kpi-icon-wrap kpi-icon-cyan">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiActiveCameras">
+              {{ stats.active_cameras }}
+            </div>
+            <div class="kpi-footer">
+              <span class="pulse-dot"></span>
+              <span style="color: var(--text-muted); margin-left: 6px;">All Nodes Operational</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- MAIN DASHBOARD SPLIT: LIVE CAMERA + RECENT ACTIVITY -->
+        <section class="dashboard-main-grid" id="liveCameraSection">
+          <!-- Large Live Camera Card -->
+          <div class="card camera-card">
+            <div class="camera-card-header">
+              <div class="camera-title-group">
+                <span class="live-pill"><span class="pulse-dot" style="background:#EF4444;"></span> LIVE</span>
+                <div>
+                  <h3 style="font-size: 1.1rem;">Live Camera Monitoring</h3>
+                  <span style="font-size: 0.78rem; color: var(--text-muted);">CAM-01 (Main Gate Entrance)</span>
+                </div>
+              </div>
+
+              <div class="camera-telemetry">
+                <div class="telemetry-item">
+                  <span>FPS:</span>
+                  <strong id="liveFps">{{ stats.camera_fps or 25 }}</strong>
+                </div>
+                <div class="telemetry-item">
+                  <span>Model:</span>
+                  <strong>YOLOv8 + Face-Rec</strong>
+                </div>
+                <div class="telemetry-item">
+                  <span>Status:</span>
+                  <span class="badge badge-known">STREAMING</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Video Screen Wrapper -->
+            <div class="camera-screen-wrap" id="cameraScreenWrapper">
+              <img id="cameraStream" class="camera-stream-img" src="/video_feed" alt="Live AI Camera Feed">
+
+              <div id="cameraFallback" class="camera-fallback-ui" style="display: none;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M1 1l22 22"></path>
+                  <path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34m-7.72-2.06a4 4 0 1 1-5.56-5.56"></path>
+                </svg>
+                <div style="font-weight: 700; font-size: 1.1rem; color: #F1F5F9;">Camera Stream Offline</div>
+                <div style="font-size: 0.85rem; max-width: 320px;">
+                  The camera feed is paused or unavailable. Click 'Start Camera' or check camera device permissions.
+                </div>
+                <button class="btn btn-primary" onclick="document.getElementById('btnStartCamera').click()">
+                  Reconnect Stream
+                </button>
+              </div>
+            </div>
+
+            <!-- Controls Toolbar -->
+            <div class="camera-controls-bar">
+              <div class="control-btn-group">
+                <button id="btnStartCamera" class="btn btn-primary">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  <span>Start Camera</span>
+                </button>
+
+                <button id="btnStopCamera" class="btn btn-secondary">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>
+                  </svg>
+                  <span>Stop</span>
+                </button>
+
+                <button id="btnCapture" class="btn btn-secondary">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                  <span>Capture & Details</span>
+                </button>
+
+                <button id="btnUploadIdentify" class="btn btn-secondary" title="Upload an image to identify person and display timetable">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  <span>Upload & Identify</span>
+                </button>
+                <input type="file" id="inputUploadIdentify" accept="image/*" style="display: none;">
+              </div>
+
+              <div class="control-btn-group">
+                <button id="btnRefresh" class="btn btn-secondary btn-icon-only" title="Refresh Feed">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  </svg>
+                </button>
+
+                <button id="btnFullscreen" class="btn btn-secondary btn-icon-only" title="Fullscreen View">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <polyline points="9 21 3 21 3 15"></polyline>
+                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Detections List -->
+          <div class="card activity-card">
+            <div class="activity-header">
+              <div>
+                <h3 style="font-size: 1.1rem;">Recent Detections</h3>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">Real-time identification events</span>
+              </div>
+              <a href="/detections" style="font-size: 0.82rem; font-weight: 700; color: var(--primary);">View All →</a>
+            </div>
+
+            <div class="activity-list" id="recentDetectionsList">
+              <div style="padding: 24px; text-align: center; color: #94A3B8;">Loading detection stream...</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ANALYTICS CHARTS SECTION -->
+        <section class="analytics-grid" id="analyticsSection">
+          <!-- Chart 1: Detection Activity Trend -->
+          <div class="card">
+            <div class="chart-header">
+              <div>
+                <h3 style="font-size: 1.05rem;">Hourly Detection Volume</h3>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">Today's surveillance traffic profile</span>
+              </div>
+              <span class="badge badge-known">+18% Peak Activity</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="activityTrendChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 2: Known vs Unknown Ratio -->
+          <div class="card">
+            <div class="chart-header">
+              <div>
+                <h3 style="font-size: 1.05rem;">Classification Ratio</h3>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">Known individuals vs Security alerts</span>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <span class="badge badge-known">Known 72%</span>
+                <span class="badge badge-unknown">Alerts 28%</span>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="distributionDonutChart"></canvas>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="/static/js/dashboard.js"></script>
+  <script src="/static/js/camera.js"></script>
+</body>
+</html>

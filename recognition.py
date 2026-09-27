@@ -29,12 +29,24 @@ class FaceRecognizer:
     def _init_detector(self):
         """Initializes OpenCV Haar Cascade classifier for face detection."""
         try:
-            cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-            if os.path.exists(cascade_path):
-                self.face_cascade = cv2.CascadeClassifier(cascade_path)
-                logger.info("Loaded Haar Cascade face detector from %s", cascade_path)
-            else:
-                logger.warning("Haar Cascade not found at standard OpenCV path.")
+            if not hasattr(cv2, "CascadeClassifier"):
+                logger.info("OpenCV build does not include CascadeClassifier; person head-region heuristic active.")
+                return
+
+            candidates = [
+                os.path.join(os.path.dirname(__file__), "models", "haarcascade_frontalface_default.xml"),
+                getattr(cv2.data, "haarcascades", "") + "haarcascade_frontalface_default.xml",
+                "haarcascade_frontalface_default.xml"
+            ]
+            loaded = False
+            for cascade_path in candidates:
+                if cascade_path and os.path.exists(cascade_path):
+                    self.face_cascade = cv2.CascadeClassifier(cascade_path)
+                    logger.info("Loaded Haar Cascade face detector from %s", cascade_path)
+                    loaded = True
+                    break
+            if not loaded:
+                logger.warning("Haar Cascade not found in standard paths or models/ directory.")
         except Exception as e:
             logger.warning("Failed to initialize Haar Cascade: %s", e)
 
@@ -191,6 +203,11 @@ class FaceRecognizer:
                 fx, fy, fw, fh = faces[0]
                 face_crop = cropped_person[fy:fy+fh, fx:fx+fw]
                 face_detected = True
+        else:
+            ph, pw = cropped_person.shape[:2]
+            if ph > 40 and pw > 30:
+                face_crop = cropped_person[0:int(ph * 0.4), :]
+                face_detected = True
 
         # Match face crop against known database
         target_sig = self._compute_signature(face_crop)
@@ -208,7 +225,7 @@ class FaceRecognizer:
                         best_match = entry
 
         # Threshold for known person recognition
-        if best_match is not None and highest_score >= 0.72:
+        if best_match is not None and highest_score >= 0.50:
             res = {
                 "status": "known",
                 "person_id": best_match["person_id"],
@@ -245,14 +262,12 @@ class FaceRecognizer:
 
         return self._create_unknown_result()
 
-    def _create_unknown_result(self) -> Dict[str, Any]:
+    def _create_unknown_result(self, uid: Optional[str] = None) -> Dict[str, Any]:
         """Generates structured record for unrecognized person."""
-        uid = f"UNKNOWN-{self.unknown_counter:04d}"
-        self.unknown_counter += 1
         return {
             "status": "unknown",
-            "person_id": uid,
-            "name": "Unknown Person",
+            "person_id": uid or "UNKNOWN-0001",
+            "name": "Unknown Visitor",
             "department": "Unassigned",
             "role": "Visitor / Unknown",
             "confidence": 0.917,

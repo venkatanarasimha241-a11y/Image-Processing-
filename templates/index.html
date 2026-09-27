@@ -135,6 +135,12 @@
           <span class="badge badge-known" style="font-size: 0.72rem;">🛡️ ADMIN CONSOLE</span>
           {% endif %}
 
+          <!-- FIREBASE / FIRESTORE STATUS BUTTON -->
+          <button id="btnFirebaseStatus" class="btn btn-secondary" style="font-size: 0.75rem; padding: 6px 14px; gap: 6px; border-radius: 99px; cursor: pointer;" onclick="openFirebaseModal()" title="Firebase Cloud Firestore Database & Image Storage">
+            <span class="pulse-dot" id="firebaseDot" style="background: #F59E0B;"></span>
+            <span id="firebaseStatusText">🔥 Firebase: Checking...</span>
+          </button>
+
           <button class="notification-btn" aria-label="Notifications">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -266,6 +272,10 @@
                   <span>Status:</span>
                   <span class="badge badge-known">STREAMING</span>
                 </div>
+                <div class="telemetry-item" id="recLockTelemetry">
+                  <span>Capture:</span>
+                  <span class="badge" id="recLockBadge" style="background: #E2E8F0; color: #475569; font-size: 0.72rem;">READY (1-TIME CAPTURE)</span>
+                </div>
               </div>
             </div>
 
@@ -312,6 +322,13 @@
                     <circle cx="12" cy="13" r="4"></circle>
                   </svg>
                   <span>Capture & Details</span>
+                </button>
+
+                <button id="btnResetRec" class="btn btn-secondary" title="Reset scan lock to recognize & capture next person">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                  </svg>
+                  <span>Scan Next Person</span>
                 </button>
 
                 <button id="btnUploadIdentify" class="btn btn-secondary" title="Upload an image to identify person and display timetable">
@@ -400,6 +417,85 @@
   </div>
 
   <div id="toastContainer" class="toast-container"></div>
+
+  <!-- FIREBASE FIRESTORE CONFIGURATION MODAL -->
+  <div id="firebaseModal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 580px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.4rem;">🔥</span>
+          <div>
+            <h3 style="margin: 0; font-size: 1.1rem; color: #0F172A;">Firebase & Firestore Setup</h3>
+            <span style="font-size: 0.78rem; color: #64748B;">Cloud Database & Firestore Image Storage</span>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-icon-only" onclick="closeFirebaseModal()" style="padding: 4px 8px; font-size: 1.1rem;">✕</button>
+      </div>
+
+      <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
+        <!-- Status Banner -->
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-weight: 700; font-size: 0.85rem; color: #1E293B;">Database Mode:</span>
+            <span id="fbModalMode"><span class="badge badge-unknown">Checking...</span></span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.82rem; color: #64748B;">Project ID:</span>
+            <span id="fbModalProject" style="font-family: monospace; font-size: 0.85rem; font-weight: 600;">--</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.82rem; color: #64748B;">Image Storage Engine:</span>
+            <span id="fbModalStorage" style="font-size: 0.82rem; font-weight: 700; color: #2563EB;">Cloud Firestore (images collection)</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 6px; color: #1E293B;">Connect Your Firebase Account</h4>
+          <p style="font-size: 0.82rem; color: #64748B; margin-bottom: 12px; line-height: 1.4;">
+            Upload your Firebase Admin SDK service account key or paste its JSON content below.
+            Images captured from surveillance cameras and registered persons are encoded and stored directly in Firestore!
+          </p>
+        </div>
+
+        <!-- Form -->
+        <form onsubmit="saveFirebaseConfig(event)">
+          <div class="form-group">
+            <label class="form-label" style="font-weight: 600; font-size: 0.84rem;">Upload serviceAccountKey.json</label>
+            <input type="file" id="fbFileInput" accept=".json" class="custom-select" style="width: 100%; padding: 8px;">
+          </div>
+
+          <div style="text-align: center; margin: 10px 0; font-size: 0.8rem; color: #94A3B8;">— OR PASTE JSON CONTENT —</div>
+
+          <div class="form-group">
+            <label class="form-label" style="font-weight: 600; font-size: 0.84rem;">Service Account Key JSON</label>
+            <textarea id="fbJsonInput" rows="5" class="custom-select" style="width: 100%; font-family: monospace; font-size: 0.78rem; padding: 10px; border-radius: 8px;" placeholder='{"type": "service_account", "project_id": "your-firebase-project", ...}'></textarea>
+          </div>
+
+          <div id="fbTestResult" style="margin: 12px 0; font-size: 0.84rem; min-height: 20px;"></div>
+
+          <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+            <button type="button" id="btnTestFirestore" class="btn btn-secondary" onclick="testFirebaseConnection()">
+              ⚡ Test Firestore Connection
+            </button>
+            <button type="submit" class="btn btn-primary">
+              💾 Save & Connect Firebase
+            </button>
+          </div>
+        </form>
+
+        <!-- Quick Help Accordion -->
+        <div style="margin-top: 20px; padding-top: 14px; border-top: 1px solid #E2E8F0; font-size: 0.8rem; color: #64748B;">
+          <strong>How to get your Firebase Service Account Key:</strong>
+          <ol style="margin-top: 6px; padding-left: 18px; line-height: 1.6;">
+            <li>Open the <a href="https://console.firebase.google.com/" target="_blank" style="color: #2563EB; text-decoration: underline;">Firebase Console</a>.</li>
+            <li>Select your project &rarr; Click <strong>Project Settings</strong> (gear icon) &rarr; <strong>Service accounts</strong> tab.</li>
+            <li>Click <strong>Generate new private key</strong> &rarr; save as <code>serviceAccountKey.json</code>.</li>
+            <li>Make sure <strong>Cloud Firestore</strong> is enabled in your Firebase console.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="/static/js/dashboard.js"></script>
   <script src="/static/js/camera.js"></script>

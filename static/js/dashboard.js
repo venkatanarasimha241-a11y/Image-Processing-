@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initAlertsPolling();
   initCharts();
   initMobileNav();
+  initFirebaseStatus();
 });
 
 // ---------------------------------------------------------
@@ -362,3 +363,124 @@ function escapeHtml(text) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+
+// ---------------------------------------------------------
+// Firebase Firestore Status & Configuration
+// ---------------------------------------------------------
+function initFirebaseStatus() {
+  fetchFirebaseStatus();
+  setInterval(fetchFirebaseStatus, 12000);
+}
+
+async function fetchFirebaseStatus() {
+  try {
+    const res = await fetch('/api/firebase/status');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.success && data.status) {
+      updateFirebaseUI(data.status);
+    }
+  } catch (e) {
+    console.warn('Firebase status fetch failed:', e);
+  }
+}
+
+function updateFirebaseUI(status) {
+  const badge = document.getElementById('firebaseStatusText');
+  const dot = document.getElementById('firebaseDot');
+  const modalMode = document.getElementById('fbModalMode');
+  const modalProject = document.getElementById('fbModalProject');
+  const modalStorage = document.getElementById('fbModalStorage');
+
+  if (status.connected) {
+    if (badge) badge.textContent = `🔥 Firestore: ${status.project_id}`;
+    if (dot) dot.style.background = '#22C55E';
+    if (modalMode) {
+      modalMode.innerHTML = `<span class="badge badge-known">CONNECTED (LIVE CLOUD)</span>`;
+    }
+  } else {
+    if (badge) badge.textContent = '🔥 Firebase: Demo Mode';
+    if (dot) dot.style.background = '#F59E0B';
+    if (modalMode) {
+      modalMode.innerHTML = `<span class="badge badge-unknown">DEMO MODE (Local)</span>`;
+    }
+  }
+
+  if (modalProject) modalProject.textContent = status.project_id || 'Not configured';
+  if (modalStorage) modalStorage.textContent = status.image_storage || "Cloud Firestore ('images' collection)";
+}
+
+window.openFirebaseModal = function() {
+  const modal = document.getElementById('firebaseModal');
+  if (modal) {
+    modal.classList.add('show');
+    fetchFirebaseStatus();
+  }
+};
+
+window.closeFirebaseModal = function() {
+  const modal = document.getElementById('firebaseModal');
+  if (modal) modal.classList.remove('show');
+};
+
+window.testFirebaseConnection = async function() {
+  const testBtn = document.getElementById('btnTestFirestore');
+  const statusMsg = document.getElementById('fbTestResult');
+  if (testBtn) testBtn.disabled = true;
+  if (statusMsg) statusMsg.innerHTML = '<span style="color:#64748B;">Testing connection to Cloud Firestore...</span>';
+
+  try {
+    const res = await fetch('/api/firebase/test', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      if (statusMsg) statusMsg.innerHTML = `<span style="color:#16A34A; font-weight:600;">✓ ${data.message}</span>`;
+      fetchFirebaseStatus();
+    } else {
+      if (statusMsg) statusMsg.innerHTML = `<span style="color:#DC2626; font-weight:600;">✗ ${data.error || 'Connection failed'}</span>`;
+    }
+  } catch (err) {
+    if (statusMsg) statusMsg.innerHTML = `<span style="color:#DC2626;">Network error testing Firestore: ${err}</span>`;
+  } finally {
+    if (testBtn) testBtn.disabled = false;
+  }
+};
+
+window.saveFirebaseConfig = async function(e) {
+  if (e) e.preventDefault();
+  const jsonInput = document.getElementById('fbJsonInput');
+  const jsonText = jsonInput ? jsonInput.value.trim() : '';
+  const fileInput = document.getElementById('fbFileInput');
+  const statusMsg = document.getElementById('fbTestResult');
+
+  const formData = new FormData();
+  if (fileInput && fileInput.files && fileInput.files.length > 0) {
+    formData.append('file', fileInput.files[0]);
+  } else if (jsonText) {
+    formData.append('credentials_json', jsonText);
+  } else {
+    alert('Please paste service account JSON or select a file');
+    return;
+  }
+
+  if (statusMsg) statusMsg.innerHTML = '<span style="color:#64748B;">Connecting & verifying credentials...</span>';
+
+  try {
+    const res = await fetch('/api/firebase/configure', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (statusMsg) statusMsg.innerHTML = `<span style="color:#16A34A; font-weight:600;">✓ Connected to Cloud Firestore successfully!</span>`;
+      fetchFirebaseStatus();
+      setTimeout(() => {
+        closeFirebaseModal();
+        location.reload();
+      }, 1500);
+    } else {
+      if (statusMsg) statusMsg.innerHTML = `<span style="color:#DC2626; font-weight:600;">✗ ${data.error || 'Configuration failed'}</span>`;
+    }
+  } catch (err) {
+    if (statusMsg) statusMsg.innerHTML = `<span style="color:#DC2626;">Error: ${err}</span>`;
+  }
+};

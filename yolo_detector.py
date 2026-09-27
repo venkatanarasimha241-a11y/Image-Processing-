@@ -83,7 +83,20 @@ class YOLODetector:
             return self._generate_demo_detections(w, h)
 
         try:
-            results = self.model(frame, verbose=False, conf=CONFIDENCE_THRESHOLD)
+            # Multi-object tracking with persistence across video frames
+            try:
+                results = self.model.track(
+                    frame,
+                    persist=True,
+                    verbose=False,
+                    conf=CONFIDENCE_THRESHOLD,
+                    tracker="bytetrack.yaml"
+                )
+            except Exception as track_err:
+                # Graceful fallback to standard inference if tracker encounters an issue
+                logger.debug("Tracker fallback to standard detection: %s", track_err)
+                results = self.model(frame, verbose=False, conf=CONFIDENCE_THRESHOLD)
+
             detections = []
             for r in results:
                 boxes = r.boxes
@@ -92,6 +105,14 @@ class YOLODetector:
                     conf = float(box.conf[0].item())
                     xyxy = box.xyxy[0].tolist()
                     x1, y1, x2, y2 = [int(v) for v in xyxy]
+
+                    # Extract tracking ID if available
+                    track_id = None
+                    if hasattr(box, "id") and box.id is not None:
+                        try:
+                            track_id = int(box.id[0].item())
+                        except Exception:
+                            track_id = None
 
                     # Clamp to frame bounds
                     x1 = max(0, min(w - 1, x1))
@@ -105,7 +126,8 @@ class YOLODetector:
                         "class_id": cls_id,
                         "class_name": cls_name,
                         "confidence": round(conf, 3),
-                        "bbox": [x1, y1, x2, y2]
+                        "bbox": [x1, y1, x2, y2],
+                        "track_id": track_id
                     })
             return detections
         except Exception as e:
@@ -125,7 +147,8 @@ class YOLODetector:
                 "class_id": 0,
                 "class_name": "person",
                 "confidence": 0.945,
-                "bbox": [bx1, by1, bx2, by2]
+                "bbox": [bx1, by1, bx2, by2],
+                "track_id": 1
             }
         ]
 

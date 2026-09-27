@@ -7,13 +7,22 @@ Maintains in-memory and local file persistence when running in DEMO MODE.
 
 import os
 import uuid
+import base64
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple, Union
+import cv2
+import numpy as np
 
-from firebase_config import get_firestore_client, get_storage_bucket, is_demo_mode
+from firebase_config import (
+    get_firestore_client, get_storage_bucket, is_demo_mode,
+    get_firebase_status, test_firestore_connection, initialize_firebase
+)
 
 logger = logging.getLogger("FirebaseService")
+
+# In-memory image cache {image_id: (bytes, content_type)}
+_firestore_images_cache: Dict[str, Tuple[bytes, str]] = {}
 
 # Local fallback store for Demo Mode with comprehensive Student & Faculty records
 _local_persons: List[Dict[str, Any]] = [
@@ -215,24 +224,166 @@ _local_detections: List[Dict[str, Any]] = [
 ]
 
 
-def upload_evidence_image(local_image_path: str, destination_blob_name: str) -> str:
+def save_image_to_firestore(
+    image_input: Union[str, bytes, np.ndarray],
+    image_id: Optional[str] = None,
+    filename: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
-    Upload an evidence image to Firebase Storage if connected,
-    otherwise store locally and return the relative serving URL.
+    Saves an image into Google Cloud Firestore in the 'images' collection.
+    Encodes image as Base64 JPEG (optimized under 1MB Firestore document limit).
+    Returns metadata dict containing image_id and dedicated Firestore serving URL.
     """
-    bucket = get_storage_bucket()
-    if bucket is not None and not is_demo_mode():
-        try:
-            blob = bucket.blob(destination_blob_name)
-            blob.upload_from_filename(local_image_path)
-            blob.make_public()
-            return blob.public_url
-        except Exception as e:
-            logger.warning("Failed to upload to Firebase Storage: %s. Falling back to local URL.", e)
+    if not image_id:
+        image_id = f"img_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
 
-    # Local fallback
+    jpeg_bytes = None
+
+    try:
+        if isinstance(image_input, np.ndarray):
+            # Encode numpy array frame directly to JPEG
+            # Resize if dimensions exceed 800px to maintain light document footprint (~30-60KB)
+            h, w = image_input.shape[:2]
+            max_dim = 800
+            if max(h, w) > max_dim:
+                scale = max_dim / max(h, w)
+                resized = cv2.resize(image_input, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+            else:
+                resized = image_input
+            ret, buf = cv2.imencode('.jpg', resized, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            if ret:
+                jpeg_bytes = buf.tobytes()
+        elif isinstance(image_input, str):
+            # File path
+            if os.path.exists(image_input):
+                img = cv2.imread(image_input)
+                if img is not None:
+                    h, w = img.shape[:2]
+                    max_dim = 800
+                    if max(h, w) > max_dim:
+                        scale = max_dim / max(h, w)
+                        img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+                    ret, buf = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                    if ret:
+                        jpeg_bytes = buf.tobytes()
+                else:
+                    with open(image_input, 'rb') as f:
+                        jpeg_bytes = f.read()
+        elif isinstance(image_input, bytes):
+            jpeg_bytes = image_input
+    except Exception as e:
+        logger.warning("Error preparing image for Firestore: %s", e)
+
+    if not jpeg_bytes:
+        logger.warning("Failed to obtain JPEG bytes for image_id %s", image_id)
+        return {
+            "image_id": image_id,
+            "image_url": "/static/images/default_avatar.svg",
+            "data_url": "",
+            "size_bytes": 0,
+            "filename": filename or f"{image_id}.jpg"
+        }
+
+    b64_str = base64.b64encode(jpeg_bytes).decode('utf-8')
+    data_url = f"data:image/jpeg;base64,{b64_str}"
+    serving_url = f"/api/firestore/image/{image_id}"
+
+    # Cache locally in memory for instant delivery
+    _firestore_images_cache[image_id] = (jpeg_bytes, "image/jpeg")
+
+    # Save to Firestore 'images' collection
+    db = get_firestore_client()
+    if db is not None and not is_demo_mode():
+        try:
+            image_doc = {
+                "id": image_id,
+                "filename": filename or f"{image_id}.jpg",
+                "content_type": "image/jpeg",
+                "base64_data": b64_str,
+                "size_bytes": len(jpeg_bytes),
+                "created_at": datetime.now().isoformat(),
+                "metadata": metadata or {}
+            }
+            db.collection("images").document(image_id).set(image_doc)
+            logger.info("Saved image %s (%d bytes) to Firestore collection 'images'", image_id, len(jpeg_bytes))
+        except Exception as e:
+            logger.warning("Firestore image write failed: %s. Using local memory cache.", e)
+
+    return {
+        "image_id": image_id,
+        "image_url": serving_url,
+        "data_url": data_url,
+        "size_bytes": len(jpeg_bytes),
+        "filename": filename or f"{image_id}.jpg"
+    }
+
+
+def get_image_from_firestore(image_id: str) -> Tuple[Optional[bytes], str]:
+    """
+    Retrieves image binary bytes and mime type from Firestore 'images' collection
+    or local cache / fallback files.
+    """
+    # 1. Memory cache check
+    if image_id in _firestore_images_cache:
+        return _firestore_images_cache[image_id]
+
+    # 2. Query Cloud Firestore 'images' collection
+    db = get_firestore_client()
+    if db is not None and not is_demo_mode():
+        try:
+            doc = db.collection("images").document(image_id).get()
+            if doc.exists:
+                doc_data = doc.to_dict()
+                b64 = doc_data.get("base64_data") or doc_data.get("data")
+                if b64:
+                    if "base64," in b64:
+                        b64 = b64.split("base64,")[1]
+                    img_bytes = base64.b64decode(b64)
+                    content_type = doc_data.get("content_type", "image/jpeg")
+                    _firestore_images_cache[image_id] = (img_bytes, content_type)
+                    return img_bytes, content_type
+        except Exception as e:
+            logger.warning("Firestore image retrieval failed for %s: %s", image_id, e)
+
+    # 3. Local disk fallback
+    search_dirs = ["captured_images", "known_faces", "static/images"]
+    for sdir in search_dirs:
+        candidates = [
+            os.path.join(sdir, image_id),
+            os.path.join(sdir, f"{image_id}.jpg"),
+            os.path.join(sdir, f"{image_id}.png")
+        ]
+        for cpath in candidates:
+            if os.path.exists(cpath):
+                try:
+                    with open(cpath, "rb") as f:
+                        content = f.read()
+                    mimetype = "image/png" if cpath.endswith(".png") else "image/jpeg"
+                    _firestore_images_cache[image_id] = (content, mimetype)
+                    return content, mimetype
+                except Exception:
+                    pass
+
+    return None, "image/jpeg"
+
+
+def upload_evidence_image(local_image_path: str, destination_blob_name: str, frame_np: Optional[Any] = None) -> str:
+    """
+    Stores evidence image in Cloud Firestore 'images' collection as Base64 JPEG.
+    Returns the dedicated Firestore serving URL (/api/firestore/image/<id>).
+    """
     filename = os.path.basename(local_image_path)
-    return f"/captured_images/{filename}"
+    clean_name = filename.rsplit('.', 1)[0].replace(" ", "_")
+    image_id = clean_name
+
+    res = save_image_to_firestore(
+        image_input=frame_np if frame_np is not None else local_image_path,
+        image_id=image_id,
+        filename=filename,
+        metadata={"storage_path": destination_blob_name}
+    )
+    return res.get("image_url", f"/captured_images/{filename}")
 
 
 def save_detection(detection_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -246,10 +397,14 @@ def save_detection(detection_data: Dict[str, Any]) -> Dict[str, Any]:
     if "raw_timestamp" not in detection_data:
         detection_data["raw_timestamp"] = datetime.now().isoformat()
 
+    # Ensure Firestore image metadata linkage
+    if "image_id" not in detection_data and detection_data.get("image_url", "").startswith("/api/firestore/image/"):
+        detection_data["image_id"] = detection_data["image_url"].split("/api/firestore/image/")[1]
+
     if db is not None and not is_demo_mode():
         try:
             db.collection("detections").document(record_id).set(detection_data)
-            logger.info("Saved detection %s to Firestore", record_id)
+            logger.info("Saved detection %s to Firestore 'detections' collection", record_id)
         except Exception as e:
             logger.warning("Firestore write failed: %s. Saved to local store.", e)
             _local_detections.insert(0, detection_data)
@@ -522,6 +677,9 @@ def get_system_stats() -> Dict[str, Any]:
     hours = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"]
     hourly_activity = [45, 120, 210, 185, 290, 230, 95]
 
+    fb_status = get_firebase_status()
+    firestore_images_count = len(_firestore_images_cache)
+
     return {
         "total_detections": display_total,
         "known_persons": display_known,
@@ -532,5 +690,8 @@ def get_system_stats() -> Dict[str, Any]:
         "chart_labels": hours,
         "chart_data": hourly_activity,
         "is_demo_mode": is_demo_mode(),
-        "storage_mode": "Firebase Cloud" if not is_demo_mode() else "Local Cache (Demo Mode)"
+        "storage_mode": "Cloud Firestore (Base64 Images)" if not is_demo_mode() else "Local Cache (Firestore Emulated)",
+        "firebase_status": fb_status,
+        "firestore_images_count": firestore_images_count
     }
+

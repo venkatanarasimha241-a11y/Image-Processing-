@@ -56,6 +56,29 @@ def serve_captured_image(filename):
     return send_from_directory(CAPTURED_IMAGES_DIR, filename)
 
 
+@app.route("/api/firestore/image/<image_id>")
+def serve_firestore_image(image_id):
+    """
+    Streams binary image data directly from Cloud Firestore 'images' collection.
+    Decodes stored Base64 JPEG with caching headers and local fallback.
+    """
+    try:
+        img_bytes, content_type = firebase_service.get_image_from_firestore(image_id)
+        if img_bytes:
+            return Response(
+                img_bytes,
+                mimetype=content_type,
+                headers={
+                    "Cache-Control": "public, max-age=86400",
+                    "Content-Disposition": f"inline; filename={image_id}.jpg"
+                }
+            )
+    except Exception as e:
+        logger.warning("Error serving Firestore image %s: %s", image_id, e)
+
+    return redirect(url_for('static', filename='images/default_avatar.svg'))
+
+
 # ---------------------------------------------------------
 # Web Page Routes
 # ---------------------------------------------------------
@@ -259,7 +282,17 @@ def api_persons():
                 filename = f"{person_id or 'STU'}_{name.replace(' ', '_')}_{file.filename}"
                 save_path = os.path.join(KNOWN_FACES_DIR, filename)
                 file.save(save_path)
-                image_url = f"/known_faces/{filename}"
+                
+                # Store face image in Firestore 'images' collection
+                img_id = f"person_{person_id or 'STU'}_{int(datetime.now().timestamp())}"
+                stored_img = firebase_service.save_image_to_firestore(
+                    image_input=save_path,
+                    image_id=img_id,
+                    filename=filename,
+                    metadata={"person_id": person_id, "name": name, "role": role}
+                )
+                image_url = stored_img.get("image_url", f"/known_faces/{filename}")
+
                 # Refresh face recognizer database
                 camera_manager.recognizer.load_known_faces()
 
@@ -362,11 +395,127 @@ def api_capture():
     return jsonify({"success": False, "error": "Camera frame not available for capture"}), 400
 
 
+@app.route("/api/recognition/latest", methods=["GET"])
+def api_latest_recognition():
+    """
+    Returns the latest person recognition result from the live camera.
+    Allows frontend to automatically display person details & timetable
+    once recognized, without repeatedly capturing on live.
+    """
+    latest = camera_manager.get_latest_recognition()
+    return jsonify({
+        "success": True,
+        "recognition": latest,
+        "recognized_count": len(camera_manager.recognized_persons),
+        "recognized_persons": list(camera_manager.recognized_persons)
+    }), 200
+
+
+@app.route("/api/recognition/reset", methods=["POST"])
+def api_reset_recognition():
+    """
+    Resets the recognized persons live cache so camera can scan/recognize again.
+    """
+    camera_manager.reset_recognition()
+    return jsonify({
+        "success": True,
+        "message": "Live capture lock reset. Ready to capture and recognize next person."
+    }), 200
+
+
+@app.route("/api/tracking/active", methods=["GET"])
+def api_active_tracking():
+    """
+    Returns all currently active person and object presence sessions.
+    Shows who is present, time first seen, time last seen, and missing frame counts.
+    """
+    sessions = camera_manager.presence_tracker.get_active_sessions()
+    return jsonify({
+        "success": True,
+        "count": len(sessions),
+        "sessions": sessions,
+        "max_missing_frames": camera_manager.presence_tracker.max_missing_frames
+    }), 200
+
+
 @app.route("/api/alerts", methods=["GET"])
 def api_alerts():
     """Return recent alert notifications."""
     alerts = camera_manager.recent_alerts
     return jsonify({"success": True, "alerts": alerts}), 200
+
+
+@app.route("/api/firebase/status", methods=["GET"])
+def api_firebase_status():
+    """Returns current Firebase Firestore and image storage status."""
+    try:
+        status = firebase_config.get_firebase_status()
+        status["images_cached_count"] = len(firebase_service._firestore_images_cache)
+        return jsonify({"success": True, "status": status}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/firebase/configure", methods=["POST"])
+def api_firebase_configure():
+    """
+    Updates Firebase configuration using either uploaded JSON file
+    or JSON text pasted from Firebase Console serviceAccountKey.json.
+    """
+    try:
+        data = None
+        if "file" in request.files:
+            file = request.files["file"]
+            if file and file.filename.endswith(".json"):
+                import json
+                data = json.loads(file.read().decode("utf-8"))
+        elif request.is_json:
+            req_json = request.get_json()
+            if "credentials_json" in req_json:
+                import json
+                data = json.loads(req_json["credentials_json"])
+            elif "type" in req_json and req_json.get("type") == "service_account":
+                data = req_json
+        else:
+            cred_text = request.form.get("credentials_json", "").strip()
+            if cred_text:
+                import json
+                data = json.loads(cred_text)
+
+        if not data:
+            return jsonify({"success": False, "error": "No valid service account JSON provided"}), 400
+
+        is_valid, msg = firebase_config.validate_credentials_dict(data)
+        if not is_valid:
+            return jsonify({"success": False, "error": f"Validation failed: {msg}"}), 400
+
+        # Save to serviceAccountKey.json
+        key_path = os.path.join(os.path.dirname(__file__), "serviceAccountKey.json")
+        with open(key_path, "w", encoding="utf-8") as f:
+            import json
+            json.dump(data, f, indent=2)
+
+        # Reinitialize Firebase with live credentials
+        firebase_config.initialize_firebase(credentials_input=data, force_reinit=True)
+        test_result = firebase_config.test_firestore_connection()
+
+        return jsonify({
+            "success": test_result.get("success", False),
+            "message": test_result.get("message", "Firebase credentials saved!"),
+            "error": test_result.get("error"),
+            "status": firebase_config.get_firebase_status()
+        }), (200 if test_result.get("success") else 400)
+
+    except Exception as e:
+        logger.error("Error configuring Firebase: %s", e)
+        return jsonify({"success": False, "error": f"Failed to configure Firebase: {str(e)}"}), 500
+
+
+@app.route("/api/firebase/test", methods=["POST"])
+def api_firebase_test():
+    """Tests the Cloud Firestore read/write connection."""
+    res = firebase_config.test_firestore_connection()
+    return jsonify(res), (200 if res.get("success") else 400)
 
 
 # ---------------------------------------------------------
@@ -391,5 +540,18 @@ def internal_error(error):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5001))
     host = os.environ.get("HOST", "0.0.0.0")
+
+    # Gracefully fallback if port is momentarily occupied
+    import socket
+    def is_port_in_use(p):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(('127.0.0.1', p)) == 0
+
+    if is_port_in_use(port):
+        alt_port = port + 1
+        if not is_port_in_use(alt_port):
+            logger.warning("Port %d is occupied. Automatically using port %d.", port, alt_port)
+            port = alt_port
+
     print(f"🚀 AI Camera Monitoring System running at http://127.0.0.1:{port}")
     app.run(host=host, port=port, debug=False, threaded=True)

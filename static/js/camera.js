@@ -71,6 +71,79 @@ function initCameraControls() {
     });
   }
 
+  // Live recognition telemetry badge updater
+  function updateCaptureBadge(isLocked, personName = '') {
+    const badge = document.getElementById('recLockBadge');
+    if (!badge) return;
+    if (isLocked) {
+      badge.textContent = `🔒 CAPTURED: ${personName || 'LOCKED'} (NO RE-CAPTURE)`;
+      badge.style.background = '#ECFDF5';
+      badge.style.color = '#065F46';
+      badge.style.border = '1px solid #A7F3D0';
+    } else {
+      badge.textContent = 'READY (1-TIME CAPTURE)';
+      badge.style.background = '#E2E8F0';
+      badge.style.color = '#475569';
+      badge.style.border = 'none';
+    }
+  }
+
+  // Polling for live stream recognition result
+  let lastShownRecId = null;
+  let recPollingInterval = null;
+
+  function startRecognitionPolling() {
+    if (recPollingInterval) clearInterval(recPollingInterval);
+    recPollingInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/recognition/latest');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (data.success && data.recognition) {
+          const rec = data.recognition;
+          const pName = rec.name || (rec.person && rec.person.name) || rec.person_id;
+          updateCaptureBadge(true, pName);
+
+          // If this is a new recognition event we haven't displayed yet
+          if (rec.id && rec.id !== lastShownRecId) {
+            lastShownRecId = rec.id;
+            showSnapshotModal(rec);
+            showToast(`✓ Person Recognized: ${pName}. Results returned! Live capture locked.`, 'success');
+          }
+        } else if (data.success && (!data.recognized_persons || data.recognized_persons.length === 0)) {
+          updateCaptureBadge(false);
+        }
+      } catch (e) {
+        // Silent fail during poll
+      }
+    }, 1500);
+  }
+
+  // Start polling immediately
+  startRecognitionPolling();
+
+  // Reset Recognition / Scan Next Person button
+  const resetBtn = document.getElementById('btnResetRec');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', async () => {
+      try {
+        resetBtn.disabled = true;
+        const res = await fetch('/api/recognition/reset', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          lastShownRecId = null;
+          updateCaptureBadge(false);
+          showToast('Live capture unlocked. Ready for next person!', 'primary');
+        }
+      } catch (e) {
+        showToast('Error resetting live capture', 'danger');
+      } finally {
+        resetBtn.disabled = false;
+      }
+    });
+  }
+
   // Instant Snapshot Capture
   if (captureBtn) {
     captureBtn.addEventListener('click', async () => {
@@ -81,8 +154,11 @@ function initCameraControls() {
         const data = await res.json();
 
         if (data.success && data.snapshot) {
+          lastShownRecId = data.snapshot.id;
+          const pName = data.snapshot.person?.name || data.snapshot.person?.person_id;
+          updateCaptureBadge(true, pName);
           showSnapshotModal(data.snapshot);
-          showToast('Evidence snapshot recorded!', 'success');
+          showToast('Evidence snapshot recorded! Live capture locked.', 'success');
         } else {
           showToast(data.error || 'Failed to capture frame', 'danger');
         }
@@ -375,6 +451,16 @@ function showSnapshotModal(snapshot) {
           </div>
         </div>
 
+        <div style="margin-top: 12px; padding: 10px 14px; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; color: #065F46;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.1rem;">🔒</span>
+            <span><strong>Live Capture Locked:</strong> Person recognized once. Results returned. Live camera will not capture again.</span>
+          </div>
+          <button id="modalResetRecBtn" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem; white-space: nowrap;">
+            Scan Next Person
+          </button>
+        </div>
+
         ${personContentHtml}
       </div>
 
@@ -393,7 +479,24 @@ function showSnapshotModal(snapshot) {
 
   const closeBtn = modal.querySelector('#closeSnapModal');
   const okBtn = modal.querySelector('#okSnapModal');
-  [closeBtn, okBtn].forEach(b => b.addEventListener('click', () => modal.classList.remove('show')));
+  const modalResetBtn = modal.querySelector('#modalResetRecBtn');
+
+  [closeBtn, okBtn].forEach(b => {
+    if (b) b.addEventListener('click', () => modal.classList.remove('show'));
+  });
+
+  if (modalResetBtn) {
+    modalResetBtn.addEventListener('click', async () => {
+      try {
+        await fetch('/api/recognition/reset', { method: 'POST' });
+        updateCaptureBadge(false);
+        showToast('Live capture lock cleared. Ready for next person!', 'primary');
+      } catch (err) {
+        console.warn('Reset error:', err);
+      }
+      modal.classList.remove('show');
+    });
+  }
 
   // Trigger modal display
   setTimeout(() => modal.classList.add('show'), 20);

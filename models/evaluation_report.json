@@ -1,0 +1,107 @@
+{
+  "model_path": "/Users/venkatanarasimaha/Desktop/Image Processing /models/best_model.pth",
+  "overall_test_accuracy": 1.0,
+  "calibrated_threshold_used": 0.8,
+  "total_test_samples": 54,
+  "num_classes": 6,
+  "per_class_metrics": {
+    "Faculty_001": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 9
+    },
+    "Faculty_002": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 9
+    },
+    "Student_001": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 9
+    },
+    "Student_002": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 9
+    },
+    "Student_003": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 9
+    },
+    "Student_004": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "support": 9
+    }
+  },
+  "confused_pairs": [],
+  "confusion_matrix": [
+    [
+      9,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      9,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      9,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      9,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      9,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      9
+    ]
+  ],
+  "confusion_matrix_plot": "/Users/venkatanarasimaha/Desktop/Image Processing /static/images/confusion_matrix.png",
+  "unknown_impostor_evaluation": {
+    "total_unknown_evaluated": 90,
+    "false_acceptance_count": 0,
+    "false_acceptance_rate": 0.0,
+    "unknown_rejection_rate": 1.0,
+    "evaluation_threshold": 0.8,
+    "impostor_similarity_min": 0.4836,
+    "impostor_similarity_mean": 0.6338,
+    "impostor_similarity_max": 0.7946
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "timestamp": "2026-10-22T18:57:23Z",
+  "model_path": "/Users/venkatanarasimaha/Desktop/Image Processing /models/best_model.pth",
+  "architecture": "FaceCNN_4Block",
+  "num_classes": 6,
+  "class_names": {
+    "0": "Faculty_001",
+    "1": "Faculty_002",
+    "2": "Student_001",
+    "3": "Student_002",
+    "4": "Student_003",
+    "5": "Student_004"
+  },
+  "system_info": {
+    "platform": "darwin",
+    "python_version": "3.13.9",
+    "torch_version": "2.14.0",
+    "opencv_version": "5.0.0",
+    "apple_silicon_mps": true
+  },
+  "model_size": {
+    "file_size_bytes": 5102901,
+    "file_size_mb": 4.867,
+    "total_parameters": 422694,
+    "trainable_parameters": 422694,
+    "pure_weights_mb": 1.617
+  },
+  "memory_usage": {
+    "initial_rss_mb": 304.2,
+    "after_load_rss_mb": 304.47,
+    "net_model_rss_mb": 0.27
+  },
+  "accuracy_and_rejection": {
+    "test_identification_accuracy": 1.0,
+    "total_test_samples": 54,
+    "total_unknown_samples": 90,
+    "operational_threshold": 0.84,
+    "false_acceptance_count": 15,
+    "false_acceptance_rate": 0.1667,
+    "false_rejection_count": 0,
+    "false_rejection_rate": 0.0,
+    "genuine_similarity_min": 0.9563,
+    "genuine_similarity_mean": 0.9886,
+    "genuine_similarity_max": 0.9977,
+    "impostor_similarity_min": 0.605,
+    "impostor_similarity_mean": 0.7443,
+    "impostor_similarity_max": 0.8714,
+    "threshold_sweep": {
+      "0.70": {
+        "far": 0.6667,
+        "frr": 0.0,
+        "accuracy": 1.0
+      },
+      "0.75": {
+        "far": 0.3889,
+        "frr": 0.0,
+        "accuracy": 1.0
+      },
+      "0.80": {
+        "far": 0.3,
+        "frr": 0.0,
+        "accuracy": 1.0
+      },
+      "0.82": {
+        "far": 0.2556,
+        "frr": 0.0,
+        "accuracy": 1.0
+      },
+      "0.84": {
+        "far": 0.1667,
+        "frr": 0.0,
+        "accuracy": 1.0
+      },
+      "0.86": {
+        "far": 0.0556,
+        "frr": 0.0,
+        "accuracy": 1.0
+      },
+      "0.88": {
+        "far": 0.0,
+        "frr": 0.0,
+        "accuracy": 1.0
+      },
+      "0.90": {
+        "far": 0.0,
+        "frr": 0.0,
+        "accuracy": 1.0
+      },
+      "0.92": {
+        "far": 0.0,
+        "frr": 0.0,
+        "accuracy": 1.0
+      },
+      "0.95": {
+        "far": 0.0,
+        "frr": 0.0,
+        "accuracy": 1.0
+      }
+    }
+  },
+  "speed_benchmarks": {
+    "cpu": {
+      "device": "cpu",
+      "single_latency_mean_ms": 3.605,
+      "single_latency_median_ms": 3.469,
+      "single_latency_p95_ms": 4.559,
+      "single_latency_min_ms": 2.365,
+      "single_latency_max_ms": 10.238,
+      "single_fps": 277.4,
+      "batch16_latency_mean_ms": 57.543,
+      "batch16_throughput_fps": 278.1
+    },
+    "mps": {
+      "device": "mps",
+      "single_latency_mean_ms": 4.338,
+      "single_latency_median_ms": 4.16,
+      "single_latency_p95_ms": 6.102,
+      "single_latency_min_ms": 2.57,
+      "single_latency_max_ms": 6.836,
+      "single_fps": 230.5,
+      "batch16_latency_mean_ms": 24.756,
+      "batch16_throughput_fps": 646.3
+    },
+    "end_to_end_pipeline_cpu": {
+      "preprocess_mean_ms": 0.587,
+      "cnn_embedding_mean_ms": 3.139,
+      "gallery_matching_mean_ms": 0.021,
+      "total_pipeline_mean_ms": 3.747,
+      "pipeline_fps": 266.9
+    }
+  }
+}

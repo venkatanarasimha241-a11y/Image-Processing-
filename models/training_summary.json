@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "epochs_run": 15,
+  "best_epoch": 14,
+  "best_val_accuracy": 1.0,
+  "final_train_accuracy": 1.0,
+  "model_path": "/Users/venkatanarasimaha/Desktop/Image Processing /models/best_model.pth",
+  "class_names_path": "/Users/venkatanarasimaha/Desktop/Image Processing /class_names.json",
+  "num_classes": 6,
+  "classes": {
+    "0": "Faculty_001",
+    "1": "Faculty_002",
+    "2": "Student_001",
+    "3": "Student_002",
+    "4": "Student_003",
+    "5": "Student_004"
+  }
+}

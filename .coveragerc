@@ -1,0 +1,27 @@
+[run]
+branch = True
+source = .
+omit =
+    .conda/*
+    tests/*
+    dataset/*
+    known_faces/*
+    captured_images/*
+    unknown_test/*
+    models/*
+    static/*
+    templates/*
+    train_cnn.py
+    evaluate_model.py
+    calibrate_threshold.py
+    dataset_builder.py
+    test_rtsp.py
+    test_pipeline.py
+
+[report]
+show_missing = True
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.:
+    raise NotImplementedError

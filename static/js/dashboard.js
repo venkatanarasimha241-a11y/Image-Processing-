@@ -2,16 +2,16 @@
  * dashboard.js
  * ------------
  * Core JavaScript logic for AI Camera Monitoring Dashboard.
- * Handles live KPI telemetry, animated counters, activity feed updates,
- * alerts toast system, and responsive chart visualizers.
+ * Handles real-time KPI telemetry, real dynamic charts, live activity stream,
+ * detection evidence modal inspection, and modal dialog controllers.
  */
+
+let cachedDetections = [];
 
 document.addEventListener('DOMContentLoaded', () => {
   initClock();
-  initAnimatedCounters();
   initRecentDetectionsPolling();
-  initAlertsPolling();
-  initCharts();
+  initKPIPolling();
   initMobileNav();
   initFirebaseStatus();
 });
@@ -42,201 +42,306 @@ function initClock() {
 }
 
 // ---------------------------------------------------------
-// Animated Number Counters
+// Real-time KPI & Analytics Polling
 // ---------------------------------------------------------
-function initAnimatedCounters() {
-  const counterElements = document.querySelectorAll('.animate-counter');
+function initKPIPolling() {
+  async function fetchStats() {
+    try {
+      const res = await fetch('/api/stats');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.success || !data.stats) return;
 
-  counterElements.forEach(el => {
-    const target = parseInt(el.getAttribute('data-target') || el.innerText.replace(/,/g, ''), 10);
-    if (isNaN(target)) return;
+      const s = data.stats;
+      const cam = data.camera || {};
 
-    let current = 0;
-    const duration = 1200; // ms
-    const stepTime = 20;
-    const totalSteps = duration / stepTime;
-    const increment = target / totalSteps;
-
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= target) {
-        current = target;
-        clearInterval(timer);
+      // 1. Update KPI Values
+      const elReg = document.getElementById('kpiRegisteredPersons');
+      if (elReg && s.registered_persons_count !== undefined) {
+        elReg.textContent = Number(s.registered_persons_count).toLocaleString();
       }
-      el.textContent = Math.round(current).toLocaleString();
-    }, stepTime);
-  });
+
+      const elKnown = document.getElementById('kpiKnownPersons');
+      if (elKnown && s.known_persons !== undefined) {
+        elKnown.textContent = Number(s.known_persons).toLocaleString();
+      }
+
+      const elUnknown = document.getElementById('kpiUnknownPersons');
+      if (elUnknown && s.unknown_persons !== undefined) {
+        elUnknown.textContent = Number(s.unknown_persons).toLocaleString();
+      }
+
+      const elObj = document.getElementById('kpiDetectedObjects');
+      if (elObj && s.total_detected_objects !== undefined) {
+        elObj.textContent = Number(s.total_detected_objects).toLocaleString();
+      }
+
+      const elActiveCam = document.getElementById('kpiActiveCameras');
+      if (elActiveCam && s.active_cameras) {
+        elActiveCam.textContent = s.active_cameras;
+      }
+
+      // Update objects badge with specific breakdown
+      const elObjBadge = document.getElementById('kpiObjectsBadge');
+      if (elObjBadge && s.objects_breakdown) {
+        const topObjs = Object.entries(s.objects_breakdown)
+          .filter(([k, v]) => k !== 'person' && v > 0)
+          .map(([k, v]) => `${k}: ${v}`);
+        if (topObjs.length > 0) {
+          elObjBadge.textContent = topObjs.slice(0, 2).join(' | ');
+        }
+      }
+
+      // 2. Update Charts with REAL backend data
+      if (s.chart_labels && s.chart_data) {
+        renderActivityChart(s.chart_labels, s.chart_data);
+      }
+
+      const knownVal = Number(s.known_persons) || 0;
+      const unkVal = Number(s.unknown_persons) || 0;
+      renderDistributionChart(knownVal, unkVal);
+
+      // Update badges
+      const ratioKnown = document.getElementById('ratioKnownBadge');
+      const ratioUnknown = document.getElementById('ratioUnknownBadge');
+      const totalPersons = knownVal + unkVal;
+      if (ratioKnown && totalPersons > 0) {
+        const pctKnown = Math.round((knownVal / totalPersons) * 100);
+        ratioKnown.textContent = `Known ${pctKnown}%`;
+      }
+      if (ratioUnknown && totalPersons > 0) {
+        const pctUnk = Math.round((unkVal / totalPersons) * 100);
+        ratioUnknown.textContent = `Alerts ${pctUnk}%`;
+      }
+
+    } catch (e) {
+      console.warn('Failed to fetch KPI stats:', e);
+    }
+  }
+
+  fetchStats();
+  setInterval(fetchStats, 3000);
 }
 
 // ---------------------------------------------------------
-// Real-time KPI & Detections Polling
+// Real-time Detection Feed Polling & Rendering
 // ---------------------------------------------------------
 function initRecentDetectionsPolling() {
   const activityList = document.getElementById('recentDetectionsList');
 
   async function fetchLatest() {
     try {
-      const res = await fetch('/api/detections?limit=6');
+      const res = await fetch('/api/detections?limit=8');
       if (!res.ok) return;
       const data = await res.json();
+      if (!data.success || !data.detections) return;
 
-      if (data.success && data.detections && activityList) {
-        renderRecentDetections(data.detections, activityList);
-      }
-
-      // Also refresh KPI counters
-      const statsRes = await fetch('/api/stats');
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        if (statsData.success && statsData.stats) {
-          updateKpis(statsData.stats);
-        }
-      }
+      cachedDetections = data.detections;
+      renderDetections(data.detections);
     } catch (e) {
-      console.warn('Telemetry polling error:', e);
+      console.warn('Failed to fetch detections stream:', e);
     }
   }
 
-  // Poll every 4 seconds
-  setInterval(fetchLatest, 4000);
-}
+  function renderDetections(records) {
+    if (!activityList) return;
+    if (!records || records.length === 0) {
+      activityList.innerHTML = `
+        <div style="padding: 32px 16px; text-align: center; color: #94A3B8;">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 8px;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div style="font-size: 0.88rem; font-weight: 600;">No surveillance detections recorded yet</div>
+          <div style="font-size: 0.78rem; margin-top: 4px;">Camera events will stream here live as persons or objects are identified.</div>
+        </div>
+      `;
+      return;
+    }
 
-function updateKpis(stats) {
-  const totalEl = document.getElementById('kpiTotalDetections');
-  const knownEl = document.getElementById('kpiKnownPersons');
-  const unknownEl = document.getElementById('kpiUnknownPersons');
-  const cameraEl = document.getElementById('kpiActiveCameras');
+    activityList.innerHTML = records.map((r, idx) => {
+      const status = (r.recognition_status || 'unknown').toLowerCase();
+      const isKnown = status === 'known';
+      const isObject = status === 'object' || (r.object_class && r.object_class !== 'person');
+      const isNoFace = status === 'face_unavailable' || status === 'no_face';
 
-  if (totalEl) totalEl.textContent = Number(stats.total_detections).toLocaleString();
-  if (knownEl) knownEl.textContent = Number(stats.known_persons).toLocaleString();
-  if (unknownEl) unknownEl.textContent = Number(stats.unknown_persons).toLocaleString();
-  if (cameraEl && stats.active_cameras) cameraEl.textContent = stats.active_cameras;
-}
+      let badgeClass = 'badge-unknown';
+      let badgeLabel = 'SECURITY ALERT';
+      let icon = '⚠️';
 
-function renderRecentDetections(detections, container) {
-  if (detections.length === 0) {
-    container.innerHTML = '<div style="padding: 24px; text-align: center; color: #94A3B8;">No recent detections recorded</div>';
-    return;
+      if (isKnown) {
+        badgeClass = 'badge-known';
+        badgeLabel = 'VERIFIED';
+        icon = '✓';
+      } else if (isObject) {
+        badgeClass = 'badge-secondary';
+        badgeLabel = (r.object_class || 'OBJECT').toUpperCase();
+        icon = '📦';
+      } else if (isNoFace) {
+        badgeClass = 'badge-secondary';
+        badgeLabel = 'FACE UNAVAIL';
+        icon = '👤';
+      }
+
+      const imgUrl = r.thumbnail_url || r.image_url || '/static/images/default_avatar.svg';
+      const score = (r.similarity_score !== undefined && isKnown) ?
+        Math.round(r.similarity_score * 100) :
+        Math.round((r.yolo_confidence || r.confidence || 0.80) * 100);
+
+      const metricLabel = isKnown ? `Sim: ${score}%` : `Conf: ${score}%`;
+      const timeStr = r.timestamp || 'Just now';
+      const camName = r.camera_name || r.camera_id || 'Gate Camera';
+
+      return `
+        <div class="activity-item" onclick="openDetectionDetailById('${r.id}')" style="cursor: pointer; transition: background 0.15s ease;" title="Click to inspect detection evidence">
+          <div class="activity-avatar-wrap">
+            <img src="${imgUrl}" alt="${r.person_name || 'Detection'}" onerror="this.src='/static/images/default_avatar.svg'">
+            <span class="activity-badge-mini ${isKnown ? 'mini-known' : (isObject ? 'mini-object' : 'mini-unknown')}">${icon}</span>
+          </div>
+          <div class="activity-content">
+            <div class="activity-title-row">
+              <span class="activity-name">${escapeHtml(r.person_name || 'Unknown Subject')}</span>
+              <span class="badge ${badgeClass}" style="font-size: 0.68rem; padding: 2px 7px;">${badgeLabel}</span>
+            </div>
+            <div class="activity-meta-row" style="font-size: 0.74rem; color: #64748B; margin-top: 3px; display: flex; justify-content: space-between;">
+              <span>📹 ${escapeHtml(camName)} • <strong style="color: #1E293B;">${metricLabel}</strong></span>
+              <span>${escapeHtml(timeStr)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
-  const html = detections.map(det => {
-    const isKnown = det.recognition_status === 'known';
-    const badgeClass = isKnown ? 'badge-known' : 'badge-unknown';
-    const badgeText = isKnown ? 'KNOWN' : 'UNKNOWN';
-    const confPercent = Math.round(det.confidence * 100);
+  fetchLatest();
+  setInterval(fetchLatest, 2500);
+}
 
-    return `
-      <div class="activity-item animate-fade-in">
-        <img class="activity-thumb" src="${det.image_url || '/static/images/default_avatar.svg'}"
-             alt="${det.person_name}" onerror="this.src='/static/images/default_avatar.svg'">
-        <div class="activity-info">
-          <div class="activity-title-row">
-            <span class="activity-name">${escapeHtml(det.person_name)}</span>
-            <span class="badge ${badgeClass}">${badgeText}</span>
-          </div>
-          <div class="activity-meta">
-            <span><i class="camera-icon"></i> ${escapeHtml(det.camera_id)}</span>
-            <span>•</span>
-            <span>${confPercent}% match</span>
-            <span>•</span>
-            <span>${escapeHtml(det.timestamp)}</span>
-          </div>
+// ---------------------------------------------------------
+// Detection Evidence Modal Inspection
+// ---------------------------------------------------------
+function openDetectionDetailById(recordId) {
+  const record = cachedDetections.find(d => d.id === recordId);
+  if (!record) return;
+
+  const modal = document.getElementById('detectionDetailModal');
+  const body = document.getElementById('detModalBody');
+  const title = document.getElementById('detModalTitle');
+  const subtitle = document.getElementById('detModalSubtitle');
+  if (!modal || !body) return;
+
+  const status = (record.recognition_status || 'unknown').toLowerCase();
+  const isKnown = status === 'known';
+  const isObject = status === 'object' || (record.object_class && record.object_class !== 'person');
+  const isNoFace = status === 'face_unavailable' || status === 'no_face';
+
+  title.textContent = record.person_name || 'Detection Event';
+  subtitle.textContent = `${record.camera_name || record.camera_id || 'Camera'} • ${record.timestamp || 'Recorded'}`;
+
+  const imgUrl = record.image_url || '/static/images/default_avatar.svg';
+
+  // Distinct separated metrics
+  const yoloConf = record.yolo_confidence !== undefined ? `${Math.round(record.yolo_confidence * 100)}%` : 'N/A';
+  const faceConf = record.face_confidence !== undefined ? `${Math.round(record.face_confidence * 100)}%` : 'N/A';
+  const simScore = (record.similarity_score !== undefined && !isNoFace && !isObject) ? `${Math.round(record.similarity_score * 100)}%` : 'N/A';
+  const threshold = record.decision_threshold !== undefined ? `${record.decision_threshold}` : '0.85';
+
+  let timetableHtml = '';
+  if (record.timetable && record.timetable.length > 0) {
+    timetableHtml = `
+      <div style="margin-top: 16px;">
+        <h4 style="font-size: 0.88rem; font-weight: 700; color: #1E293B; margin-bottom: 8px;">Academic Schedule / Timetable</h4>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          ${record.timetable.map(t => `
+            <div style="padding: 8px 12px; background: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0; font-size: 0.78rem;">
+              <strong>${t.day} (${t.time}):</strong> ${t.subject} - <em>${t.room || 'Room TBA'}</em>
+            </div>
+          `).join('')}
         </div>
       </div>
     `;
-  }).join('');
-
-  container.innerHTML = html;
-}
-
-// ---------------------------------------------------------
-// Unknown Person Alert Notifications
-// ---------------------------------------------------------
-let notifiedAlertIds = new Set();
-
-function initAlertsPolling() {
-  async function checkAlerts() {
-    try {
-      const res = await fetch('/api/alerts');
-      if (!res.ok) return;
-      const data = await res.json();
-
-      if (data.success && data.alerts && data.alerts.length > 0) {
-        const latest = data.alerts[0];
-        if (!notifiedAlertIds.has(latest.id)) {
-          notifiedAlertIds.add(latest.id);
-          showToast(`⚠️ ${latest.title}`, 'danger');
-        }
-      }
-    } catch (e) {
-      console.warn('Alert polling error:', e);
-    }
   }
 
-  setInterval(checkAlerts, 5000);
-}
+  body.innerHTML = `
+    <div style="display: flex; gap: 16px; margin-bottom: 18px; align-items: flex-start;">
+      <img src="${imgUrl}" style="width: 140px; height: 140px; object-fit: cover; border-radius: 12px; border: 2px solid #E2E8F0; box-shadow: 0 4px 10px rgba(0,0,0,0.06);">
+      <div style="flex: 1;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+          <h3 style="margin: 0; font-size: 1.2rem; color: #0F172A;">${escapeHtml(record.person_name || 'Unknown')}</h3>
+          <span class="badge ${isKnown ? 'badge-known' : (isObject || isNoFace ? 'badge-secondary' : 'badge-unknown')}">${isKnown ? 'KNOWN VERIFIED' : (isObject ? 'OBJECT DETECTED' : (isNoFace ? 'FACE UNAVAILABLE' : 'UNKNOWN VISITOR'))}</span>
+        </div>
+        <div style="font-size: 0.82rem; color: #64748B; line-height: 1.6;">
+          <div><strong>ID:</strong> ${escapeHtml(record.person_id || 'N/A')}</div>
+          <div><strong>Department:</strong> ${escapeHtml(record.department || 'Visitor')}</div>
+          <div><strong>Role:</strong> ${escapeHtml(record.role || 'Visitor')}</div>
+          <div><strong>Camera:</strong> ${escapeHtml(record.camera_name || record.camera_id)} (${escapeHtml(record.camera_location || 'Campus')})</div>
+        </div>
+      </div>
+    </div>
 
-// ---------------------------------------------------------
-// Toast System
-// ---------------------------------------------------------
-function showToast(message, type = 'primary') {
-  let container = document.getElementById('toastContainer');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'toastContainer';
-    container.className = 'toast-container';
-    document.body.appendChild(container);
-  }
+    <!-- SEPARATED METRICS GRID -->
+    <div style="background: #F1F5F9; border-radius: 10px; padding: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center;">
+      <div>
+        <span style="font-size: 0.72rem; color: #64748B; font-weight: 600;">YOLO Object Conf</span>
+        <div style="font-size: 1.05rem; font-weight: 800; color: #D97706;">${yoloConf}</div>
+      </div>
+      <div>
+        <span style="font-size: 0.72rem; color: #64748B; font-weight: 600;">Face Detector Conf</span>
+        <div style="font-size: 1.05rem; font-weight: 800; color: #2563EB;">${faceConf}</div>
+      </div>
+      <div>
+        <span style="font-size: 0.72rem; color: #64748B; font-weight: 600;">Cosine Similarity</span>
+        <div style="font-size: 1.05rem; font-weight: 800; color: ${isKnown ? '#16A34A' : (isNoFace ? '#64748B' : '#DC2626')};">${simScore}</div>
+      </div>
+      <div>
+        <span style="font-size: 0.72rem; color: #64748B; font-weight: 600;">Decision Threshold</span>
+        <div style="font-size: 1.05rem; font-weight: 800; color: #475569;">≥ ${threshold}</div>
+      </div>
+    </div>
 
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.innerHTML = `
-    <div style="font-weight: 600; font-size: 0.9rem; color: #1E293B;">${escapeHtml(message)}</div>
+    ${timetableHtml}
+
+    <div style="margin-top: 18px; display: flex; justify-content: flex-end;">
+      <button class="btn btn-secondary" onclick="closeDetectionDetailModal()">Close</button>
+    </div>
   `;
 
-  container.appendChild(toast);
+  modal.style.display = 'flex';
+}
 
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-10px)';
-    toast.style.transition = 'all 0.3s ease';
-    setTimeout(() => toast.remove(), 300);
-  }, 4000);
+function closeDetectionDetailModal() {
+  const modal = document.getElementById('detectionDetailModal');
+  if (modal) modal.style.display = 'none';
 }
 
 // ---------------------------------------------------------
-// Lightweight Responsive Charts (Canvas-based)
+// Real Dynamic Canvas Charts
 // ---------------------------------------------------------
-function initCharts() {
-  renderActivityChart();
-  renderDistributionChart();
-}
-
-function renderActivityChart() {
+function renderActivityChart(labels, values) {
   const canvas = document.getElementById('activityTrendChart');
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+
   canvas.width = rect.width * dpr;
   canvas.height = rect.height * dpr;
   ctx.scale(dpr, dpr);
 
-  const labels = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
-  const values = [45, 120, 210, 185, 290, 230, 95];
-  const maxVal = Math.max(...values) * 1.2;
-
+  const maxVal = Math.max(5, ...values) * 1.25;
   const w = rect.width;
   const h = rect.height;
   const padBottom = 35;
-  const padLeft = 40;
+  const padLeft = 35;
   const padTop = 20;
   const padRight = 20;
 
   ctx.clearRect(0, 0, w, h);
 
-  // Draw grid lines
+  // Grid lines
   ctx.strokeStyle = '#E2E8F0';
   ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
@@ -247,14 +352,15 @@ function renderActivityChart() {
     ctx.stroke();
   }
 
-  // Draw Gradient Area & Line
+  if (values.length < 2) return;
+
   const points = values.map((val, idx) => {
     const x = padLeft + (w - padLeft - padRight) * (idx / (values.length - 1));
     const y = h - padBottom - ((val / maxVal) * (h - padTop - padBottom));
     return { x, y };
   });
 
-  // Area
+  // Gradient area
   const grad = ctx.createLinearGradient(0, padTop, 0, h - padBottom);
   grad.addColorStop(0, 'rgba(79, 70, 229, 0.28)');
   grad.addColorStop(1, 'rgba(79, 70, 229, 0.01)');
@@ -267,7 +373,7 @@ function renderActivityChart() {
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // Line
+  // Primary line
   ctx.beginPath();
   ctx.strokeStyle = '#4F46E5';
   ctx.lineWidth = 3;
@@ -277,49 +383,55 @@ function renderActivityChart() {
   });
   ctx.stroke();
 
-  // Draw points & Labels
+  // Dots & Labels
   points.forEach((p, idx) => {
     ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#4F46E5';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Label
     ctx.fillStyle = '#64748B';
     ctx.font = '11px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(labels[idx], p.x, h - 12);
+    ctx.fillText(labels[idx] || '', p.x, h - 12);
   });
 }
 
-function renderDistributionChart() {
+function renderDistributionChart(knownCount, unknownCount) {
   const canvas = document.getElementById('distributionDonutChart');
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+
   canvas.width = rect.width * dpr;
   canvas.height = rect.height * dpr;
   ctx.scale(dpr, dpr);
 
   const cx = rect.width / 2;
   const cy = rect.height / 2;
-  const radius = Math.min(cx, cy) - 25;
+  const radius = Math.min(cx, cy) - 20;
   const innerRadius = radius * 0.65;
 
+  const total = (knownCount + unknownCount) || 1;
+  const knownPct = Math.round((knownCount / total) * 100);
+  const unkPct = 100 - knownPct;
+
   const data = [
-    { label: 'Known Persons', value: 72, color: '#22C55E' },
-    { label: 'Unknown Persons', value: 28, color: '#EF4444' }
+    { label: 'Known', value: (knownCount / total), color: '#22C55E' },
+    { label: 'Unknown', value: (unknownCount / total), color: '#EF4444' }
   ];
 
   let startAngle = -Math.PI / 2;
+  ctx.clearRect(0, 0, rect.width, rect.height);
 
   data.forEach(slice => {
-    const sliceAngle = (slice.value / 100) * (Math.PI * 2);
+    const sliceAngle = slice.value * (Math.PI * 2);
     ctx.beginPath();
     ctx.arc(cx, cy, radius, startAngle, startAngle + sliceAngle);
     ctx.arc(cx, cy, innerRadius, startAngle + sliceAngle, startAngle, true);
@@ -329,12 +441,12 @@ function renderDistributionChart() {
     startAngle += sliceAngle;
   });
 
-  // Center text
+  // Center percentage
   ctx.fillStyle = '#1E293B';
-  ctx.font = 'bold 20px sans-serif';
+  ctx.font = 'bold 22px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('72%', cx, cy - 8);
+  ctx.fillText(`${knownPct}%`, cx, cy - 6);
 
   ctx.fillStyle = '#64748B';
   ctx.font = '11px sans-serif';
@@ -342,145 +454,148 @@ function renderDistributionChart() {
 }
 
 // ---------------------------------------------------------
-// Mobile Navigation Drawer
+// Modal Open / Close Handlers
+// ---------------------------------------------------------
+function openRtspModal() {
+  const modal = document.getElementById('rtspModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeRtspModal() {
+  const modal = document.getElementById('rtspModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function openThresholdsModal() {
+  const modal = document.getElementById('thresholdsModal');
+  if (modal) {
+    // Load active settings from API
+    fetch('/api/settings/thresholds')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          const recIn = document.getElementById('inputRecThreshold');
+          const yoloIn = document.getElementById('inputYoloConf');
+          if (recIn) {
+            recIn.value = data.recognition_similarity_threshold;
+            document.getElementById('labelRecThreshold').textContent = parseFloat(data.recognition_similarity_threshold).toFixed(2);
+          }
+          if (yoloIn) {
+            yoloIn.value = data.yolo_confidence;
+            document.getElementById('labelYoloConf').textContent = parseFloat(data.yolo_confidence).toFixed(2);
+          }
+        }
+      })
+      .catch(() => {});
+    modal.style.display = 'flex';
+  }
+}
+
+function closeThresholdsModal() {
+  const modal = document.getElementById('thresholdsModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function openFirebaseModal() {
+  const modal = document.getElementById('firebaseModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeFirebaseModal() {
+  const modal = document.getElementById('firebaseModal');
+  if (modal) modal.style.display = 'none';
+}
+
+// ---------------------------------------------------------
+// Thresholds Save Handler
+// ---------------------------------------------------------
+async function saveThresholds(event) {
+  event.preventDefault();
+  const recVal = parseFloat(document.getElementById('inputRecThreshold').value);
+  const yoloVal = parseFloat(document.getElementById('inputYoloConf').value);
+
+  try {
+    const res = await fetch('/api/settings/thresholds', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recognition_similarity: recVal,
+        yolo_confidence: yoloVal
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`Thresholds updated! Face: ${recVal.toFixed(2)}, YOLO: ${yoloVal.toFixed(2)}`, 'success');
+      closeThresholdsModal();
+    }
+  } catch (e) {
+    showToast('Failed to update thresholds', 'danger');
+  }
+}
+
+// ---------------------------------------------------------
+// Mobile Nav & Utilities
 // ---------------------------------------------------------
 function initMobileNav() {
   const toggleBtn = document.getElementById('mobileNavToggle');
   const sidebar = document.querySelector('.sidebar');
+  if (!toggleBtn || !sidebar) return;
 
-  if (toggleBtn && sidebar) {
-    toggleBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('mobile-open');
-    });
-  }
+  toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+  });
 }
 
-function escapeHtml(text) {
-  if (!text) return '';
-  return String(text)
+function initFirebaseStatus() {
+  fetch('/api/firebase/status')
+    .then(res => res.json())
+    .then(data => {
+      const dot = document.getElementById('firebaseDot');
+      const txt = document.getElementById('firebaseStatusText');
+      if (data.success && data.status && data.status.connected) {
+        if (dot) dot.style.background = '#10B981';
+        if (txt) txt.textContent = `🔥 Cloud Firestore: Connected`;
+      } else {
+        if (dot) dot.style.background = '#F59E0B';
+        if (txt) txt.textContent = `🔥 Firebase: Local Cache`;
+      }
+    })
+    .catch(() => {});
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.style.cssText = `
+    padding: 12px 18px;
+    background: #1E293B;
+    color: #FFF;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    margin-bottom: 8px;
+    animation: fadeIn 0.3s ease;
+    border-left: 4px solid ${type === 'success' ? '#10B981' : (type === 'danger' ? '#EF4444' : '#3B82F6')};
+  `;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
-
-// ---------------------------------------------------------
-// Firebase Firestore Status & Configuration
-// ---------------------------------------------------------
-function initFirebaseStatus() {
-  fetchFirebaseStatus();
-  setInterval(fetchFirebaseStatus, 12000);
-}
-
-async function fetchFirebaseStatus() {
-  try {
-    const res = await fetch('/api/firebase/status');
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data.success && data.status) {
-      updateFirebaseUI(data.status);
-    }
-  } catch (e) {
-    console.warn('Firebase status fetch failed:', e);
-  }
-}
-
-function updateFirebaseUI(status) {
-  const badge = document.getElementById('firebaseStatusText');
-  const dot = document.getElementById('firebaseDot');
-  const modalMode = document.getElementById('fbModalMode');
-  const modalProject = document.getElementById('fbModalProject');
-  const modalStorage = document.getElementById('fbModalStorage');
-
-  if (status.connected) {
-    if (badge) badge.textContent = `🔥 Firestore: ${status.project_id}`;
-    if (dot) dot.style.background = '#22C55E';
-    if (modalMode) {
-      modalMode.innerHTML = `<span class="badge badge-known">CONNECTED (LIVE CLOUD)</span>`;
-    }
-  } else {
-    if (badge) badge.textContent = '🔥 Firebase: Demo Mode';
-    if (dot) dot.style.background = '#F59E0B';
-    if (modalMode) {
-      modalMode.innerHTML = `<span class="badge badge-unknown">DEMO MODE (Local)</span>`;
-    }
-  }
-
-  if (modalProject) modalProject.textContent = status.project_id || 'Not configured';
-  if (modalStorage) modalStorage.textContent = status.image_storage || "Cloud Firestore ('images' collection)";
-}
-
-window.openFirebaseModal = function() {
-  const modal = document.getElementById('firebaseModal');
-  if (modal) {
-    modal.classList.add('show');
-    fetchFirebaseStatus();
-  }
-};
-
-window.closeFirebaseModal = function() {
-  const modal = document.getElementById('firebaseModal');
-  if (modal) modal.classList.remove('show');
-};
-
-window.testFirebaseConnection = async function() {
-  const testBtn = document.getElementById('btnTestFirestore');
-  const statusMsg = document.getElementById('fbTestResult');
-  if (testBtn) testBtn.disabled = true;
-  if (statusMsg) statusMsg.innerHTML = '<span style="color:#64748B;">Testing connection to Cloud Firestore...</span>';
-
-  try {
-    const res = await fetch('/api/firebase/test', { method: 'POST' });
-    const data = await res.json();
-    if (data.success) {
-      if (statusMsg) statusMsg.innerHTML = `<span style="color:#16A34A; font-weight:600;">✓ ${data.message}</span>`;
-      fetchFirebaseStatus();
-    } else {
-      if (statusMsg) statusMsg.innerHTML = `<span style="color:#DC2626; font-weight:600;">✗ ${data.error || 'Connection failed'}</span>`;
-    }
-  } catch (err) {
-    if (statusMsg) statusMsg.innerHTML = `<span style="color:#DC2626;">Network error testing Firestore: ${err}</span>`;
-  } finally {
-    if (testBtn) testBtn.disabled = false;
-  }
-};
-
-window.saveFirebaseConfig = async function(e) {
-  if (e) e.preventDefault();
-  const jsonInput = document.getElementById('fbJsonInput');
-  const jsonText = jsonInput ? jsonInput.value.trim() : '';
-  const fileInput = document.getElementById('fbFileInput');
-  const statusMsg = document.getElementById('fbTestResult');
-
-  const formData = new FormData();
-  if (fileInput && fileInput.files && fileInput.files.length > 0) {
-    formData.append('file', fileInput.files[0]);
-  } else if (jsonText) {
-    formData.append('credentials_json', jsonText);
-  } else {
-    alert('Please paste service account JSON or select a file');
-    return;
-  }
-
-  if (statusMsg) statusMsg.innerHTML = '<span style="color:#64748B;">Connecting & verifying credentials...</span>';
-
-  try {
-    const res = await fetch('/api/firebase/configure', {
-      method: 'POST',
-      body: formData
-    });
-    const data = await res.json();
-    if (data.success) {
-      if (statusMsg) statusMsg.innerHTML = `<span style="color:#16A34A; font-weight:600;">✓ Connected to Cloud Firestore successfully!</span>`;
-      fetchFirebaseStatus();
-      setTimeout(() => {
-        closeFirebaseModal();
-        location.reload();
-      }, 1500);
-    } else {
-      if (statusMsg) statusMsg.innerHTML = `<span style="color:#DC2626; font-weight:600;">✗ ${data.error || 'Configuration failed'}</span>`;
-    }
-  } catch (err) {
-    if (statusMsg) statusMsg.innerHTML = `<span style="color:#DC2626;">Error: ${err}</span>`;
-  }
-};

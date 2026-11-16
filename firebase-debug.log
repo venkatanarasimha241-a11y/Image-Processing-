@@ -1,0 +1,41 @@
+[debug] [2026-09-29T03:47:57.869Z] ----------------------------------------------------------------------
+[debug] [2026-09-29T03:47:57.871Z] Command:       /opt/homebrew/Cellar/node/25.2.1/bin/node /Users/venkatanarasimaha/.npm/_npx/ba4f1959e38407b5/node_modules/.bin/firebase init dataconnect --project demo-no-project
+[debug] [2026-09-29T03:47:57.871Z] CLI Version:   15.32.0
+[debug] [2026-09-29T03:47:57.871Z] Platform:      darwin
+[debug] [2026-09-29T03:47:57.871Z] Node Version:  v25.2.1
+[debug] [2026-09-29T03:47:57.872Z] Detected Agent: unknown
+[debug] [2026-09-29T03:47:57.872Z] Time:          Tue Sep 29 2026 09:17:57 GMT+0530 (India Standard Time)
+[debug] [2026-09-29T03:47:57.872Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-09-29T03:47:57.885Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /Users/venkatanarasimaha/Desktop/Image Processing 
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] 
+[info] Skipping Firebase project setup because a demo project is provided
+[info] 
+=== Dataconnect Setup
+[warn] ⚠  dataconnect: Cannot detect an existing app in the current directory. 
+[debug] [2026-09-29T03:48:03.079Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-09-29T03:48:03.080Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2026-09-29T04:04:58.944Z] Error: setRawMode EBADF
+    at ReadStream.setRawMode (node:tty:81:24)
+    at [_setRawMode] [as _setRawMode] (node:internal/readline/interface:418:18)
+    at Interface.close (node:internal/readline/interface:552:24)
+    at ReadStream.ontermend (node:internal/readline/interface:280:10)
+    at ReadStream.emit (node:events:520:35)
+    at endReadableNT (node:internal/streams/readable:1701:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)

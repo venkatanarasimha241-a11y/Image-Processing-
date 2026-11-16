@@ -1,0 +1,89 @@
+{
+  "num_classes": 7,
+  "input_shape": [
+    128,
+    128,
+    3
+  ],
+  "trained_at": "2026-09-28T18:54:09.783268",
+  "classes": {
+    "0": {
+      "person_id": "FAC001",
+      "faculty_id": "FAC001",
+      "name": "Dr. Rajesh Iyer",
+      "department": "Computer Science & Engineering",
+      "role": "Faculty",
+      "designation": "Professor & Head of Department",
+      "class_index": 0
+    },
+    "1": {
+      "person_id": "FAC002",
+      "faculty_id": "FAC002",
+      "name": "Dr. Sunita Mehra",
+      "department": "Electronics & Communication",
+      "role": "Faculty",
+      "designation": "Associate Professor",
+      "class_index": 1
+    },
+    "2": {
+      "person_id": "STU001",
+      "roll_number": "21CS001",
+      "name": "Rahul Kumar",
+      "department": "Computer Science & Engineering",
+      "role": "Student",
+      "class": "CSE-3A",
+      "year": "3rd Year",
+      "cgpa": "8.92",
+      "class_index": 2
+    },
+    "3": {
+      "person_id": "STU002",
+      "roll_number": "21EC014",
+      "name": "Priya Sharma",
+      "department": "Electronics & Communication",
+      "role": "Student",
+      "class": "ECE-3B",
+      "year": "3rd Year",
+      "cgpa": "9.15",
+      "class_index": 3
+    },
+    "4": {
+      "person_id": "STU003",
+      "roll_number": "22IT033",
+      "name": "Amit Verma",
+      "department": "Information Technology",
+      "role": "Student",
+      "class": "IT-2A",
+      "year": "2nd Year",
+      "cgpa": "8.45",
+      "class_index": 4
+    },
+    "5": {
+      "person_id": "STU004",
+      "roll_number": "21AI019",
+      "name": "Sneha Patel",
+      "department": "Artificial Intelligence & Data Science",
+      "role": "Student",
+      "class": "AI-3A",
+      "year": "3rd Year",
+      "cgpa": "9.40",
+      "class_index": 5
+    },
+    "6": {
+      "person_id": "UNKNOWN",
+      "name": "Unknown Person",
+      "department": "Unassigned",
+      "role": "Visitor / Unknown",
+      "class_index": 6
+    }
+  },
+  "person_to_label": {
+    "FAC001": 0,
+    "FAC002": 1,
+    "STU001": 2,
+    "STU002": 3,
+    "STU003": 4,
+    "STU004": 5,
+    "UNKNOWN": 6
+  }
+}

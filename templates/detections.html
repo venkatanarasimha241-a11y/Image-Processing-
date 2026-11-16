@@ -140,7 +140,9 @@
               <select id="statusFilter" class="custom-select">
                 <option value="">All Statuses</option>
                 <option value="known">Known Personnel</option>
-                <option value="unknown">Unknown Persons (Alerts)</option>
+                <option value="unknown">Unknown Visitors (Alerts)</option>
+                <option value="face_unavailable">Face Unavailable</option>
+                <option value="object">Objects Detected</option>
               </select>
 
               <select id="cameraFilter" class="custom-select">
@@ -149,6 +151,7 @@
                 <option value="CAM-02">CAM-02 (Lab Block)</option>
                 <option value="CAM-03">CAM-03 (Library)</option>
                 <option value="CAM-04">CAM-04 (Admin Corridor)</option>
+                <option value="UPLOAD-ANALYSIS">Upload Analysis</option>
               </select>
             </div>
 
@@ -164,10 +167,10 @@
                 <tr>
                   <th>Timestamp</th>
                   <th>Camera Node</th>
-                  <th>Identified Person</th>
-                  <th>Type</th>
-                  <th>Object</th>
-                  <th>Confidence</th>
+                  <th>Identified Subject</th>
+                  <th>Detection Type</th>
+                  <th>Class / Object</th>
+                  <th>Confidence / Similarity</th>
                   <th>Status</th>
                   <th>Evidence</th>
                   <th>Actions</th>
@@ -175,43 +178,86 @@
               </thead>
               <tbody id="tableBody">
                 {% for d in detections %}
-                <tr data-status="{{ d.recognition_status }}" data-cam="{{ d.camera_id }}" data-name="{{ d.person_name }}" data-id="{{ d.person_id }}">
+                <tr data-status="{{ d.recognition_status }}" data-cam="{{ d.camera_id }}" data-name="{{ d.person_name }}" data-id="{{ d.person_id or '' }}">
                   <td style="font-weight: 600; color: #475569;">{{ d.timestamp }}</td>
                   <td>
                     <span style="font-weight: 700; color: #1E293B;">{{ d.camera_id }}</span>
                   </td>
                   <td>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                      <img src="{{ d.image_url }}" alt="{{ d.person_name }}" style="width: 32px; height: 32px; border-radius: 6px; object-fit: cover;" onerror="this.src='/static/images/default_avatar.svg'">
+                      <img src="{{ d.thumbnail_url or d.image_url }}" alt="{{ d.person_name }}" style="width: 32px; height: 32px; border-radius: 6px; object-fit: cover;" onerror="this.src='/static/images/default_avatar.svg'">
                       <div>
-                        <div style="font-weight: 700; color: #0F172A;">{{ d.person_name }}</div>
-                        <div style="font-size: 0.74rem; color: #64748B;">{{ d.person_id }}</div>
+                        <div style="font-weight: 700; color: #0F172A;">{{ d.person_name or (d.object_class or d.object_type or 'Object')|title }}</div>
+                        <div style="font-size: 0.74rem; color: #64748B;">{{ d.person_id if d.person_id else '-' }}</div>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <span class="badge {% if d.recognition_status == 'known' %}badge-known{% else %}badge-unknown{% endif %}">
-                      {{ d.recognition_status|upper }}
-                    </span>
+                    {% if d.recognition_status == 'known' %}
+                      <span class="badge badge-known">KNOWN</span>
+                    {% elif d.recognition_status == 'unknown' %}
+                      <span class="badge badge-unknown">UNKNOWN</span>
+                    {% elif d.recognition_status in ['face_unavailable', 'no_face'] %}
+                      <span class="badge" style="background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1;">FACE UNAVAIL</span>
+                    {% else %}
+                      <span class="badge" style="background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE;">OBJECT</span>
+                    {% endif %}
                   </td>
                   <td>
-                    <span style="font-family: monospace; font-size: 0.85rem; text-transform: uppercase;">{{ d.object_type }}</span>
+                    <span style="font-family: monospace; font-size: 0.85rem; text-transform: uppercase;">{{ (d.object_class or d.object_type or 'person') }}</span>
                   </td>
                   <td>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                      <div style="width: 50px; height: 6px; background: #E2E8F0; border-radius: 99px; overflow: hidden;">
-                        <div style="width: {{ (d.confidence * 100)|int }}%; height: 100%; background: {% if d.recognition_status == 'known' %}#22C55E{% else %}#EF4444{% endif %};"></div>
+                    {% if d.recognition_status == 'known' %}
+                      <div>
+                        <div style="font-weight: 700; font-size: 0.82rem; color: #16A34A;">
+                          Sim: {{ "{:.1f}%".format((d.similarity_score if d.similarity_score else d.confidence) * 100) }}
+                        </div>
+                        <div style="font-size: 0.70rem; color: #64748B;">
+                          YOLO: {{ "{:.0%}".format(d.yolo_confidence) if d.yolo_confidence else "90%" }}
+                        </div>
                       </div>
-                      <span style="font-weight: 700; font-size: 0.82rem;">{{ "{:.1f}%".format(d.confidence * 100) }}</span>
-                    </div>
+                    {% elif d.recognition_status == 'unknown' %}
+                      <div>
+                        <div style="font-weight: 700; font-size: 0.80rem; color: #DC2626;">
+                          Unmatched (&lt;{{ (d.decision_threshold * 100)|int if d.decision_threshold else 84 }}%)
+                        </div>
+                        <div style="font-size: 0.70rem; color: #64748B;">
+                          Sim: {{ "{:.1f}%".format((d.similarity_score if d.similarity_score else d.confidence) * 100) }} • YOLO: {{ "{:.0%}".format(d.yolo_confidence) if d.yolo_confidence else "90%" }}
+                        </div>
+                      </div>
+                    {% elif d.recognition_status in ['face_unavailable', 'no_face'] %}
+                      <div>
+                        <div style="font-weight: 700; font-size: 0.82rem; color: #475569;">
+                          YOLO: {{ "{:.0%}".format(d.yolo_confidence or d.confidence or 0.85) }}
+                        </div>
+                        <div style="font-size: 0.70rem; color: #94A3B8;">
+                          Face Unavailable
+                        </div>
+                      </div>
+                    {% else %}
+                      <div>
+                        <div style="font-weight: 700; font-size: 0.82rem; color: #2563EB;">
+                          YOLO: {{ "{:.1f}%".format((d.yolo_confidence or d.confidence) * 100) }}
+                        </div>
+                        <div style="font-size: 0.70rem; color: #64748B;">
+                          Object Detection
+                        </div>
+                      </div>
+                    {% endif %}
                   </td>
                   <td>
-                    <span style="font-size: 0.8rem; font-weight: 600; color: {% if d.recognition_status == 'known' %}#16A34A{% else %}#DC2626{% endif %};">
-                      {% if d.recognition_status == 'known' %}● Verified{% else %}▲ Alert Flagged{% endif %}
-                    </span>
+                    {% if d.recognition_status == 'known' %}
+                      <span style="font-size: 0.8rem; font-weight: 600; color: #16A34A;">● Verified Known</span>
+                    {% elif d.recognition_status == 'unknown' %}
+                      <span style="font-size: 0.8rem; font-weight: 600; color: #DC2626;">▲ Alert Flagged</span>
+                    {% elif d.recognition_status in ['face_unavailable', 'no_face'] %}
+                      <span style="font-size: 0.8rem; font-weight: 600; color: #64748B;">○ Face Unavailable</span>
+                    {% else %}
+                      <span style="font-size: 0.8rem; font-weight: 600; color: #2563EB;">● Object Detected</span>
+                    {% endif %}
                   </td>
                   <td>
-                    <img src="{{ d.image_url }}" alt="Thumb" style="width: 44px; height: 34px; border-radius: 4px; object-fit: cover; border: 1px solid #E2E8F0; cursor: pointer;" onclick="previewEvidence('{{ d.image_url }}', '{{ d.person_name }}', '{{ d.timestamp }}', '{{ d.camera_id }}')" onerror="this.src='/static/images/default_avatar.svg'">
+                    <img src="{{ d.thumbnail_url or d.image_url }}" alt="Thumb" style="width: 44px; height: 34px; border-radius: 4px; object-fit: cover; border: 1px solid #E2E8F0; cursor: pointer;" onclick="previewEvidence('{{ d.image_url }}', '{{ d.person_name }}', '{{ d.timestamp }}', '{{ d.camera_id }}')" onerror="this.src='/static/images/default_avatar.svg'">
                   </td>
                   <td>
                     <button class="btn btn-secondary" style="padding: 5px 12px; font-size: 0.78rem;" onclick="previewEvidence('{{ d.image_url }}', '{{ d.person_name }}', '{{ d.timestamp }}', '{{ d.camera_id }}')">

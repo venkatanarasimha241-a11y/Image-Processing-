@@ -1,0 +1,20 @@
+{
+  "calibrated_threshold": 0.8,
+  "metric_type": "cosine_similarity_embeddings",
+  "max_allowed_far": 0.05,
+  "metrics_at_threshold": {
+    "threshold": 0.8,
+    "far": 0.0,
+    "frr": 0.0,
+    "unknown_rejection_rate": 1.0,
+    "known_accuracy": 1.0,
+    "genuine_min_similarity": 0.9377,
+    "genuine_mean_similarity": 0.9802,
+    "impostor_mean_similarity": 0.6338,
+    "impostor_max_similarity": 0.7946
+  },
+  "total_known_evaluated": 54,
+  "total_unknown_evaluated": 90,
+  "embedding_dimension": 128,
+  "calibrated_at": "2026-10-22T19:53:13Z"
+}

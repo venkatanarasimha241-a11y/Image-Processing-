@@ -1,0 +1,202 @@
+{
+  "Faculty_001": {
+    "class_id": "Faculty_001",
+    "person_id": "FAC001",
+    "name": "Dr. Rajesh Iyer",
+    "role": "Faculty",
+    "department": "Computer Science & Engineering",
+    "designation": "Professor & Head of Department",
+    "employee_id": "FAC001",
+    "timetable": [
+      {
+        "day": "Monday",
+        "time": "09:00 - 10:00 AM",
+        "subject": "Computer Networks",
+        "room": "Lab 3"
+      },
+      {
+        "day": "Tuesday",
+        "time": "09:00 - 11:00 AM",
+        "subject": "Image Processing & CV",
+        "room": "CV Lab"
+      },
+      {
+        "day": "Thursday",
+        "time": "02:00 - 04:00 PM",
+        "subject": "Computer Vision Capstone",
+        "room": "Project Lab"
+      }
+    ]
+  },
+  "Faculty_002": {
+    "class_id": "Faculty_002",
+    "person_id": "FAC002",
+    "name": "Dr. Sunita Mehra",
+    "role": "Faculty",
+    "department": "Electronics & Communication",
+    "designation": "Associate Professor",
+    "employee_id": "FAC002",
+    "timetable": [
+      {
+        "day": "Monday",
+        "time": "09:00 - 10:00 AM",
+        "subject": "Signals & Systems",
+        "room": "ECE-201"
+      },
+      {
+        "day": "Tuesday",
+        "time": "11:30 - 01:30 PM",
+        "subject": "VLSI Design & Hardware Lab",
+        "room": "VLSI Lab"
+      },
+      {
+        "day": "Thursday",
+        "time": "10:00 - 11:00 AM",
+        "subject": "Embedded Systems",
+        "room": "ECE-202"
+      }
+    ]
+  },
+  "Student_001": {
+    "class_id": "Student_001",
+    "person_id": "STU001",
+    "name": "Rahul Kumar",
+    "role": "Student",
+    "department": "Computer Science & Engineering",
+    "roll_number": "21CS001",
+    "class": "CSE-3A",
+    "year": "3rd Year",
+    "cgpa": "8.92",
+    "timetable": [
+      {
+        "day": "Monday",
+        "time": "09:00 - 10:00 AM",
+        "subject": "Computer Networks",
+        "room": "Lab 3",
+        "faculty": "Dr. Rajesh Iyer"
+      },
+      {
+        "day": "Tuesday",
+        "time": "09:00 - 11:00 AM",
+        "subject": "Image Processing Lab",
+        "room": "CV Lab",
+        "faculty": "Dr. Rajesh Iyer"
+      },
+      {
+        "day": "Wednesday",
+        "time": "10:00 - 11:00 AM",
+        "subject": "Cloud Computing",
+        "room": "LH-104",
+        "faculty": "Prof. K. Mehta"
+      }
+    ]
+  },
+  "Student_002": {
+    "class_id": "Student_002",
+    "person_id": "STU002",
+    "name": "Priya Sharma",
+    "role": "Student",
+    "department": "Electronics & Communication",
+    "roll_number": "21EC014",
+    "class": "ECE-3B",
+    "year": "3rd Year",
+    "cgpa": "9.15",
+    "timetable": [
+      {
+        "day": "Monday",
+        "time": "09:00 - 10:00 AM",
+        "subject": "Signals & Systems",
+        "room": "ECE-201",
+        "faculty": "Dr. Sunita Mehra"
+      },
+      {
+        "day": "Tuesday",
+        "time": "11:30 - 01:30 PM",
+        "subject": "VLSI Design & Hardware Lab",
+        "room": "VLSI Lab",
+        "faculty": "Dr. Sunita Mehra"
+      }
+    ]
+  },
+  "Student_003": {
+    "class_id": "Student_003",
+    "person_id": "STU003",
+    "name": "Amit Verma",
+    "role": "Student",
+    "department": "Information Technology",
+    "roll_number": "22IT033",
+    "class": "IT-2A",
+    "year": "2nd Year",
+    "cgpa": "8.45",
+    "timetable": [
+      {
+        "day": "Monday",
+        "time": "09:00 - 10:00 AM",
+        "subject": "Data Structures & Algorithms",
+        "room": "IT-101",
+        "faculty": "Prof. S. Joshi"
+      },
+      {
+        "day": "Wednesday",
+        "time": "02:00 - 04:00 PM",
+        "subject": "DSA Lab",
+        "room": "Software Lab 2",
+        "faculty": "Prof. S. Joshi"
+      }
+    ]
+  },
+  "Student_004": {
+    "class_id": "Student_004",
+    "person_id": "STU004",
+    "name": "Sneha Patel",
+    "role": "Student",
+    "department": "Artificial Intelligence & Data Science",
+    "roll_number": "21AI019",
+    "class": "AI-3A",
+    "year": "3rd Year",
+    "cgpa": "9.40",
+    "timetable": [
+      {
+        "day": "Monday",
+        "time": "10:00 - 11:00 AM",
+        "subject": "Machine Learning Algorithms",
+        "room": "AI-301",
+        "faculty": "Dr. R. Bannerjee"
+      },
+      {
+        "day": "Tuesday",
+        "time": "01:00 - 03:00 PM",
+        "subject": "Deep Learning Studio Lab",
+        "room": "GPU Server Lab",
+        "faculty": "Dr. R. Bannerjee"
+      }
+    ]
+  },
+  "23": {
+    "class_id": "Student_023",
+    "person_id": "STU023",
+    "name": "Venkatanarasimha",
+    "role": "Student",
+    "department": "Artificial Intelligence & Data Science",
+    "roll_number": "23AI001",
+    "class": "AI&DS-Final Year",
+    "year": "4th Year",
+    "cgpa": "9.50",
+    "timetable": [
+      {
+        "day": "Monday",
+        "time": "09:00 - 10:00 AM",
+        "subject": "Deep Learning & Intelligent Systems",
+        "room": "AI Lab 1",
+        "faculty": "Dr. Rajesh Iyer"
+      },
+      {
+        "day": "Wednesday",
+        "time": "11:00 - 01:00 PM",
+        "subject": "Computer Vision Capstone Project",
+        "room": "Project Lab",
+        "faculty": "Dr. Rajesh Iyer"
+      }
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "include": [
+    "."
+  ],
+  "extraPaths": [
+    "/Users/venkatanarasimaha/Desktop/Image Processing ",
+    "/opt/anaconda3/envs/dl-env/lib/python3.11/site-packages",
+    "/opt/anaconda3/lib/python3.13/site-packages"
+  ],
+  "pythonVersion": "3.11"
+}

@@ -1,0 +1,72 @@
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 30px;
+  }
+  .hero-art {
+    min-height: 200px;
+  }
+  .metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .detect-layout {
+    grid-template-columns: 1fr;
+  }
+  .camera-grid {
+    grid-template-columns: 1fr;
+  }
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+  }
+  .main-shell {
+    margin-left: 0;
+    padding: 16px 20px 40px;
+  }
+  .mobile-top {
+    display: flex;
+  }
+  .search {
+    width: 260px;
+  }
+  .search kbd {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+  .topbar {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .search {
+    width: 100%;
+  }
+  .top-actions {
+    justify-content: flex-end;
+  }
+  .hero-copy h1 {
+    font-size: 2.1rem;
+  }
+  .section-title {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

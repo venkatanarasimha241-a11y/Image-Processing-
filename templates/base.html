@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#060a1d"><title>{% block title %}AI Detection{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/components.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/responsive.css') }}">
+</head>
+<body class="app-body">
+<div class="ambient"><i></i><i></i><i></i></div>
+{% if g.user %}
+<div class="mobile-top"><button type="button" class="icon-btn" data-sidebar aria-label="Open navigation">☰</button><a class="brand-mini" href="{{ url_for('dashboard') }}"><img src="{{ url_for('static',filename='images/logo.png') }}" alt="AI Detection logo"> <span>AI <b>VISION</b></span></a></div>
+<aside class="sidebar" id="sidebar">
+  <a class="brand" href="{{ url_for('dashboard') }}"><img src="{{ url_for('static',filename='images/logo.png') }}" alt="AI Detection logo"><span><strong>AI DETECTION</strong><small>AI VISION</small></span></a>
+  <nav>
+  {% set nav=[('dashboard','⌂','Dashboard'),('detect','▣','Image Detection'),('live_camera','◉','Live Camera'),('history','◷','Detection History'),('analytics','▥','Analytics'),('objects','◈','Object Database'),('settings','⚙','Settings')] %}
+  {% for endpoint,icon,label in nav %}<a class="nav-link {% if request.endpoint==endpoint %}active{% endif %}" href="{{ url_for(endpoint) }}"><span>{{icon}}</span>{{label}}</a>{% endfor %}
+  </nav>
+  <div class="sidebar-tip"><span>✦</span><b>Smarter Vision<br>Safer Tomorrow</b><small>Secure AI workspace</small></div>
+</aside>
+<main class="main-shell">
+<header class="topbar">
+  <div class="search"><span>⌕</span><input id="globalSearch" placeholder="Search images, objects, or events..." autocomplete="off"><kbd>⌘ K</kbd></div>
+  <div class="top-actions"><button type="button" class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">☼</button><button type="button" class="icon-btn notify" id="notifyBtn" aria-label="Notifications">♢<em>3</em></button>
+  <div class="profile-wrap"><button type="button" class="profile" id="profileBtn" aria-expanded="false"><span class="avatar">{{g.user['full_name'][0]|upper}}</span><span><b>{{g.user['full_name']}}</b><small>● Online</small></span><span>⌄</span></button><div class="profile-menu" id="profileMenu"><a href="{{url_for('settings')}}">Profile settings</a><form method="post" action="{{url_for('logout')}}"><input type="hidden" name="csrf_token" value="{{csrf_token}}"><button type="submit">Sign out</button></form></div></div></div>
+</header>
+{% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-stack">{% for cat,msg in messages %}<div class="flash {{cat}}">{{msg}}</div>{% endfor %}</div>{% endif %}{% endwith %}
+{% block content %}{% endblock %}
+</main>
+<script src="{{url_for('static',filename='js/dashboard.js')}}"></script>
+{% else %}{% block public_content %}{% endblock %}{% endif %}
+</body></html>

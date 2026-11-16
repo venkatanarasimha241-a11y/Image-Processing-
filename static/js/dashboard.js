@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initKPIPolling();
   initMobileNav();
   initFirebaseStatus();
+  initUiControls();
 });
 
 // ---------------------------------------------------------
@@ -598,4 +599,79 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function initUiControls() {
+  // 1. Profile Dropdown
+  const profileBtn = document.getElementById('profileBtn');
+  const profileMenu = document.getElementById('profileMenu');
+  if (profileBtn && profileMenu) {
+    profileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileMenu.classList.toggle('open');
+      const expanded = profileMenu.classList.contains('open');
+      profileBtn.setAttribute('aria-expanded', expanded);
+    });
+    document.addEventListener('click', (e) => {
+      if (!profileBtn.contains(e.target) && !profileMenu.contains(e.target)) {
+        profileMenu.classList.remove('open');
+        profileBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  // 2. Mobile Sidebar Toggle
+  const sidebarBtn = document.querySelector('button[data-sidebar]');
+  const sidebar = document.getElementById('sidebar');
+  if (sidebarBtn && sidebar) {
+    sidebarBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+      if (!sidebar.contains(e.target) && !sidebarBtn.contains(e.target)) {
+        sidebar.classList.remove('open');
+      }
+    });
+  }
+
+  // 3. Global Search Keyboard Shortcut (Cmd+K / Ctrl+K)
+  const searchInput = document.getElementById('globalSearch');
+  if (searchInput) {
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInput.focus();
+      }
+    });
+  }
+
+  // 4. Animate Dashboard mini bars
+  document.querySelectorAll('.bars i[data-height]').forEach(bar => {
+    const h = bar.getAttribute('data-height');
+    if (h) {
+      setTimeout(() => {
+        bar.style.height = h + '%';
+      }, 100);
+    }
+  });
+
+  // 5. Animate Analytics page progress bars
+  document.querySelectorAll('.analytics-bar[data-width]').forEach(bar => {
+    const w = bar.getAttribute('data-width');
+    if (w) {
+      setTimeout(() => {
+        bar.style.width = w + '%';
+      }, 100);
+    }
+  });
+
+  // 6. Theme Toggle (subtle ambient shift)
+  const themeToggle = document.getElementById('themeToggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('alt-theme');
+      themeToggle.textContent = document.body.classList.contains('alt-theme') ? '☾' : '☼';
+    });
+  }
 }

@@ -1,259 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - AI Camera Monitoring Platform</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css">
-  <style>
-    .feature-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.9);
-      border-radius: var(--radius-full);
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--primary);
-      margin-bottom: 12px;
-      box-shadow: var(--shadow-sm);
-    }
-  </style>
-</head>
-<body>
-  <div class="login-wrapper">
-    <!-- LEFT SIDE: AI Surveillance Branding Visual -->
-    <div class="login-visual-panel">
-      <div>
-        <div class="brand-logo" style="width: 48px; height: 48px; margin-bottom: 24px;">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-            <circle cx="12" cy="13" r="4"></circle>
-          </svg>
-        </div>
-        <span class="feature-badge">
-          <span class="pulse-dot"></span> Intelligent Computer Vision Surveillance
-        </span>
-        <h1 style="font-size: 2.6rem; font-weight: 800; color: #0F172A; margin: 16px 0; line-height: 1.2;">
-          Next-Gen AI Camera Monitoring
-        </h1>
-        <p style="font-size: 1.05rem; color: #475569; max-width: 480px; line-height: 1.6;">
-          Real-time object detection with Ultralytics YOLO, instant facial recognition matching, and cloud telemetry powered by Google Firebase.
-        </p>
-      </div>
-
-      <!-- Feature Badges Showcase -->
-      <div style="display: flex; flex-direction: column; gap: 14px; margin: 40px 0;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="width: 36px; height: 36px; border-radius: 10px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; color: var(--primary); box-shadow: var(--shadow-sm);">
-            ✓
-          </div>
-          <div>
-            <div style="font-weight: 700; color: #1E293B; font-size: 0.95rem;">Ultralytics YOLO Object Detection</div>
-            <div style="font-size: 0.8rem; color: #64748B;">High-precision person and bounding box inference</div>
-          </div>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="width: 36px; height: 36px; border-radius: 10px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; color: var(--success); box-shadow: var(--shadow-sm);">
-            ✓
-          </div>
-          <div>
-            <div style="font-weight: 700; color: #1E293B; font-size: 0.95rem;">Automated Known vs Unknown Classification</div>
-            <div style="font-size: 0.8rem; color: #64748B;">Security alert dispatching with evidence capture</div>
-          </div>
-        </div>
-
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="width: 36px; height: 36px; border-radius: 10px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; color: var(--secondary); box-shadow: var(--shadow-sm);">
-            ✓
-          </div>
-          <div>
-            <div style="font-weight: 700; color: #1E293B; font-size: 0.95rem;">Firebase Firestore & Cloud Storage</div>
-            <div style="font-size: 0.8rem; color: #64748B;">Cloud audit trails with local demo mode fallback</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Security Badge -->
-      <div style="display: flex; align-items: center; gap: 10px; padding: 12px 18px; background: rgba(255, 255, 255, 0.8); border-radius: var(--radius-lg); width: fit-content; border: 1px solid #E2E8F0;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        </svg>
-        <span style="font-size: 0.84rem; font-weight: 700; color: #334155;">Secure AI Monitoring Platform • Final Year B.Tech Project</span>
-      </div>
-    </div>
-
-    <!-- RIGHT SIDE: Login Authentication Card -->
-    <div class="login-card-panel">
-      <div class="login-box">
-        <div style="margin-bottom: 24px;">
-          <h2 style="font-size: 1.75rem; font-weight: 800; color: #0F172A; margin-bottom: 6px;">Sign In</h2>
-          <p style="font-size: 0.92rem; color: #64748B;">Choose your authentication model to access the monitoring system.</p>
-        </div>
-
-        <!-- TWO MODELS SWITCHER -->
-        <div class="model-switcher" style="display: flex; gap: 8px; background: #F1F5F9; padding: 5px; border-radius: 12px; margin-bottom: 24px;">
-          <button type="button" id="tabAdmin" class="model-tab-btn active" style="flex: 1; padding: 10px 14px; border: none; border-radius: 9px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; background: #FFFFFF; color: var(--primary); box-shadow: var(--shadow-sm);">
-            🛡️ Admin Model
-          </button>
-          <button type="button" id="tabDept" class="model-tab-btn" style="flex: 1; padding: 10px 14px; border: none; border-radius: 9px; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748B;">
-            🏛️ Department Model
-          </button>
-        </div>
-
-        <form id="loginForm">
-          <input type="hidden" id="loginModel" value="admin">
-
-          <!-- Department Selector (Visible only in Department Model) -->
-          <div class="form-group" id="deptSelectGroup" style="display: none;">
-            <label class="form-label" for="loginDept">Select Department *</label>
-            <select id="loginDept" class="custom-select" style="width: 100%;">
-              <option value="Computer Science & Engineering">Computer Science & Engineering (CSE)</option>
-              <option value="Electronics & Communication">Electronics & Communication (ECE)</option>
-              <option value="Information Technology">Information Technology (IT)</option>
-              <option value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science (AI&DS)</option>
-              <option value="Mechanical Engineering">Mechanical Engineering (MECH)</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="loginEmail" id="emailLabel">Administrator Email</label>
-            <input type="text" id="loginEmail" class="form-input" placeholder="admin@aicamera.com" value="admin@aicamera.com" required>
-          </div>
-
-          <div class="form-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label class="form-label" for="loginPassword" style="margin-bottom: 0;">Password</label>
-              <a href="#" style="font-size: 0.8rem; color: var(--primary); font-weight: 600;">Forgot password?</a>
-            </div>
-            <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" value="admin123" required>
-          </div>
-
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px;">
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.86rem; color: #475569; cursor: pointer;">
-              <input type="checkbox" checked style="accent-color: var(--primary);"> Remember session
-            </label>
-            <span id="roleBadge" class="badge badge-known" style="font-size: 0.72rem;">SUPERADMIN</span>
-          </div>
-
-          <button type="submit" id="btnLoginSubmit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem; margin-bottom: 12px;">
-            Sign In as Administrator
-          </button>
-
-          <button type="button" id="btnQuickDemo" class="btn btn-secondary" style="width: 100%; padding: 12px; font-size: 0.92rem;">
-            ⚡ Quick Demo Sign In
-          </button>
-        </form>
-
-        <div style="margin-top: 28px; padding-top: 18px; border-top: 1px solid #E2E8F0; text-align: center;">
-          <p style="font-size: 0.82rem; color: #94A3B8;">
-            AI Camera Monitoring Platform • Dual Authentication Architecture (Admin & Departments)
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const form = document.getElementById('loginForm');
-    const demoBtn = document.getElementById('btnQuickDemo');
-    const tabAdmin = document.getElementById('tabAdmin');
-    const tabDept = document.getElementById('tabDept');
-    const loginModelInput = document.getElementById('loginModel');
-    const deptSelectGroup = document.getElementById('deptSelectGroup');
-    const emailLabel = document.getElementById('emailLabel');
-    const emailInput = document.getElementById('loginEmail');
-    const passInput = document.getElementById('loginPassword');
-    const submitBtn = document.getElementById('btnLoginSubmit');
-    const roleBadge = document.getElementById('roleBadge');
-
-    function switchModel(model) {
-      loginModelInput.value = model;
-      if (model === 'admin') {
-        tabAdmin.style.background = '#FFFFFF';
-        tabAdmin.style.color = 'var(--primary)';
-        tabAdmin.style.boxShadow = 'var(--shadow-sm)';
-        tabDept.style.background = 'transparent';
-        tabDept.style.color = '#64748B';
-        tabDept.style.boxShadow = 'none';
-
-        deptSelectGroup.style.display = 'none';
-        emailLabel.textContent = 'Administrator Email / ID';
-        emailInput.value = 'admin@aicamera.com';
-        emailInput.placeholder = 'admin@aicamera.com';
-        passInput.value = 'admin123';
-        submitBtn.textContent = 'Sign In as Administrator';
-        roleBadge.textContent = 'SUPERADMIN';
-        roleBadge.className = 'badge badge-known';
-      } else {
-        tabDept.style.background = '#FFFFFF';
-        tabDept.style.color = 'var(--primary)';
-        tabDept.style.boxShadow = 'var(--shadow-sm)';
-        tabAdmin.style.background = 'transparent';
-        tabAdmin.style.color = '#64748B';
-        tabAdmin.style.boxShadow = 'none';
-
-        deptSelectGroup.style.display = 'block';
-        emailLabel.textContent = 'Department Staff ID / Email';
-        emailInput.value = 'dept.cse@aicamera.com';
-        emailInput.placeholder = 'dept.cse@aicamera.com';
-        passInput.value = 'dept123';
-        submitBtn.textContent = 'Sign In to Department Portal';
-        roleBadge.textContent = 'DEPARTMENT';
-        roleBadge.className = 'badge badge-secondary';
-      }
-    }
-
-    tabAdmin.addEventListener('click', () => switchModel('admin'));
-    tabDept.addEventListener('click', () => switchModel('department'));
-
-    async function doLogin(payload) {
-      try {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Authenticating...';
-        const res = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (data.success) {
-          window.location.href = '/';
-        } else {
-          alert(data.error || 'Authentication failed');
-          submitBtn.disabled = false;
-          submitBtn.textContent = payload.model === 'admin' ? 'Sign In as Administrator' : 'Sign In to Department Portal';
-        }
-      } catch (e) {
-        window.location.href = '/';
-      }
-    }
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const model = loginModelInput.value;
-      const email = emailInput.value.trim();
-      const password = passInput.value.trim();
-      const department = document.getElementById('loginDept').value;
-      doLogin({ model, email, password, department });
-    });
-
-    demoBtn.addEventListener('click', () => {
-      const model = loginModelInput.value;
-      if (model === 'admin') {
-        doLogin({ model: 'admin', email: 'admin@aicamera.com', password: 'admin123' });
-      } else {
-        const department = document.getElementById('loginDept').value;
-        doLogin({ model: 'department', email: 'dept.cse@aicamera.com', password: 'dept123', department });
-      }
-    });
-  </script>
-</body>
-</html>
+{% extends "base.html" %}{% block title %}AI Detection · AI Vision{% endblock %}
+{% block public_content %}
+<div class="auth-page">
+ <div class="auth-bg"></div><div class="stars"></div>
+ <header class="auth-brand"><img src="{{url_for('static',filename='images/logo.png')}}" alt="AI Detection logo"><div><b>AI DETECTION</b><span>AI VISION</span></div></header>
+ <div class="auth-tagline">See More. <span>Protect Better.</span></div>
+ <section class="auth-copy">
+   <div class="eyebrow">NEXT GENERATION SURVEILLANCE</div>
+   <h1>AI-Powered<br><span>Image Detection</span></h1>
+   <p>Smarter Vision. Safer Tomorrow.</p>
+   <div class="feature-row">
+    <div class="feature"><i>ϟ</i><span>Real-time<br>Detection</span></div><div class="feature"><i>◉</i><span>Deep Learning<br>Powered</span></div>
+    <div class="feature"><i>♢</i><span>Smart Alerts<br>& Monitoring</span></div><div class="feature"><i>⌁</i><span>Secure &<br>Scalable</span></div>
+   </div>
+   <div class="camera-card"><div class="scanline"></div><span class="det-tag person">Person&nbsp; 0.92</span><span class="det-tag car">Car&nbsp; 0.87</span><div class="camera-lens">◉</div><div class="city-caption">Your Safety<br><b>Our AI Vision</b></div></div>
+ </section>
+ <div class="edge-stickers"><span>♢<b>Secure<br>Access</b></span><span>♧<b>AI Powered<br>Detection</b></span><span>↻<b>24/7<br>Monitoring</b></span></div>
+ <section class="auth-card">
+   <div class="auth-logo"><img src="{{url_for('static',filename='images/logo.png')}}" alt="AI Detection logo"></div>
+   <h2 id="authTitle">Welcome Back</h2><p id="authSub">Sign in to your account to continue</p>
+   <div class="tabs"><button type="button" data-tab="login" class="{% if active_tab|default('login')!='signup' %}active{% endif %}">Login</button><button type="button" data-tab="signup" class="{% if active_tab|default('login')=='signup' %}active{% endif %}">Sign Up</button></div>
+   <form id="loginForm" class="auth-form {% if active_tab|default('login')=='signup' %}hidden{% endif %}" method="post" action="{{url_for('login')}}"><input type="hidden" name="csrf_token" value="{{csrf_token}}">
+     <label>Email address or username<input name="email" type="email" value="{{form_email|default('')}}" placeholder="you@example.com" required autocomplete="email"></label>
+     <label>Password<div class="pass"><input name="password" type="password" placeholder="••••••••" required><button type="button" data-password>◉</button></div></label>
+     <div class="remember"><label><input type="checkbox"> Remember me</label><a href="#" onclick="return false">Secure login</a></div>
+     <button class="gradient-btn" type="submit">Login <span>→</span></button>
+   </form>
+   <form id="signupForm" class="auth-form {% if active_tab|default('login')!='signup' %}hidden{% endif %}" method="post" action="{{url_for('register')}}"><input type="hidden" name="csrf_token" value="{{csrf_token}}">
+     <label>Full name<input name="full_name" value="{{form_name|default('')}}" placeholder="Your full name" required></label>
+     <label>Email<input name="email" type="email" value="{{form_email|default('')}}" placeholder="you@example.com" required autocomplete="email"></label>
+     <label>Password<div class="pass"><input name="password" type="password" placeholder="At least 8 characters" required minlength="8"><button type="button" data-password>◉</button></div></label>
+     <label>Confirm password<input name="confirm_password" type="password" placeholder="Repeat password" required minlength="8"></label>
+     <button class="gradient-btn" type="submit">Create account <span>→</span></button>
+   </form>
+   <div class="auth-foot">Private by design · <b>AI Vision</b> workspace</div>
+ </section>
+ <footer class="auth-footer">AI DETECTION &nbsp; · &nbsp; SMARTER SURVEILLANCE &nbsp; · &nbsp; A SAFER WORLD</footer>
+</div>
+<link rel="stylesheet" href="{{url_for('static',filename='css/auth.css')}}"><script src="{{url_for('static',filename='js/auth.js')}}"></script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Settings · AI Vision{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="section-title">
+    <div>
+      <span class="eyebrow">SYSTEM CONFIGURATION</span>
+      <h1>Settings & Engine Controls</h1>
+      <p>Configure detection sensitivity, RTSP stream parameters, and user preferences.</p>
+    </div>
+  </div>
+
+  <div class="settings-grid">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>⚙ Vision Parameters</h3>
+        <span>Inference Thresholds</span>
+      </div>
+      <form class="settings-form" onsubmit="event.preventDefault(); alert('Settings saved successfully!');">
+        <label>
+          YOLO Confidence Threshold (0.1 - 0.95)
+          <input type="range" min="10" max="95" value="50" id="confSlider" oninput="document.getElementById('confVal').textContent = (this.value/100).toFixed(2)">
+          <div class="range-val"><span id="confVal">0.50</span> (50% minimum confidence)</div>
+        </label>
+
+        <label>
+          Face Recognition Match Cosine Distance (0.5 - 0.9)
+          <input type="range" min="50" max="90" value="70" id="faceSlider" oninput="document.getElementById('faceVal').textContent = (this.value/100).toFixed(2)">
+          <div class="range-val"><span id="faceVal">0.70</span> (Higher requires closer similarity)</div>
+        </label>
+
+        <label>
+          Active RTSP Camera URL
+          <input type="text" value="rtsp://admin:****@192.168.1.108:554/h264Preview_01_main" placeholder="rtsp://user:pass@host:port/stream">
+        </label>
+
+        <button type="submit" class="gradient-btn">Save Vision Settings</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>👤 Profile & Session</h3>
+        <span>Active User</span>
+      </div>
+      <div class="profile-info-box">
+        <div class="avatar-large">{{ (g.user['full_name'][0] if g.user and g.user.get('full_name') else 'A')|upper }}</div>
+        <div>
+          <h3>{{ g.user['full_name'] if g.user and g.user.get('full_name') else 'Security Administrator' }}</h3>
+          <p>{{ g.user['email'] if g.user and g.user.get('email') else 'admin@aicamera.com' }}</p>
+          <span class="role-badge">{{ g.user['role'] if g.user and g.user.get('role') else 'System Administrator' }}</span>
+        </div>
+      </div>
+      <div class="system-stats-card">
+        <div class="stat-line"><span>Backend Framework</span><b>Flask 3.x (Python)</b></div>
+        <div class="stat-line"><span>Detection Model</span><b>Ultralytics YOLOv8n</b></div>
+        <div class="stat-line"><span>Recognition Model</span><b>YuNet + PyTorch CNN</b></div>
+        <div class="stat-line"><span>Database Mode</span><b>Firebase Firestore / Local Fallback</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

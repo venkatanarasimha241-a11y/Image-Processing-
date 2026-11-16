@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% block title %}Dashboard · AI Detection{% endblock %}{% block content %}
+<section class="page">
+<div class="hero">
+ <div class="hero-copy"><div class="status"><i></i> SYSTEM ONLINE</div><h1>AI Detection <span>Dashboard</span></h1><p>Deep Learning Based Image Detection</p><small>Advanced computer vision technology to detect, identify and analyze objects in real-time using deep learning models.</small><div class="hero-actions"><a class="gradient-btn" href="{{url_for('detect')}}">⇧ &nbsp; Upload Image</a><a class="outline-btn" href="{{url_for('live_camera')}}">◉ &nbsp; Open Live Camera</a></div></div>
+ <div class="hero-art"><img src="{{url_for('static',filename='images/dashboard-city.jpg')}}" alt="Futuristic city surveillance visual"><span class="scan-label p">PERSON&nbsp; 0.92</span><span class="scan-label c">CAR&nbsp; 0.88</span></div>
+</div>
+<div class="metrics">
+ <article class="metric cyan"><span>▣</span><div><small>Total Images</small><strong>{{total|default(0)}}</strong><em>your saved uploads</em></div><b>⌁</b></article>
+ <article class="metric violet"><span>◉</span><div><small>Objects Detected</small><strong>{{objects|default(0)}}</strong><em>real saved detections</em></div><b>⌁</b></article>
+ <article class="metric teal"><span>♢</span><div><small>Detection Accuracy</small><strong>—</strong><em>shown after AI setup</em></div><b>⌁</b></article>
+ <article class="metric magenta"><span>♙</span><div><small>Active Sessions</small><strong>01</strong><em>current browser</em></div><b>⌁</b></article>
+</div>
+<div class="grid-3">
+ <section class="panel"><div class="panel-head"><h3>⌁ Detection Activity</h3><span class="live-dot">Live</span></div><div class="timeline">{% if recent|default([]) %}{% for r in (recent|default([]))[:5] %}<div class="timeline-row"><i></i><div><b>{{r['class_name'] or 'Upload received'}}</b><small>{{r['source']}} · {{r['created_at']}}</small></div></div>{% endfor %}{% else %}<div class="empty"><b>No detections yet</b><span>Upload an image to begin your private history.</span></div>{% endif %}</div></section>
+ <section class="panel analytics-mini"><div class="panel-head"><h3>▥ Detection Analytics</h3><span>Live data</span></div><div class="bars"><i data-height="35"></i><i data-height="52"></i><i data-height="44"></i><i data-height="68"></i><i data-height="57"></i><i data-height="82"></i><i data-height="65"></i></div><div class="chart-note">Charts become meaningful as you save real detections.</div></section>
+ <section class="panel"><div class="panel-head"><h3>▧ Recent Detections</h3><a href="{{url_for('history')}}">View All →</a></div><div class="recent">{% for r in (recent|default([]))[:4] %}<a href="{{url_for('history')}}"><div class="thumb">{% if r['filename'] %}<img src="{{url_for('uploaded_file',filename=r['filename'])}}" alt="Detection preview for {{r['original_name']}}">{% endif %}</div><div><b>{{r['class_name'] or 'Not analyzed'}}</b><small>{{r['original_name']}}</small></div><strong>{{('%.1f'|format(r['confidence']))+'%' if r['confidence'] is not none else '—'}}</strong></a>{% else %}<div class="empty">No history yet.</div>{% endfor %}</div></section>
+</div>
+</section>{% endblock %}

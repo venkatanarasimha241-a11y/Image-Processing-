@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Live Camera · AI Vision{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="section-title">
+    <div>
+      <span class="eyebrow">REAL-TIME SURVEILLANCE</span>
+      <h1>Live AI Camera</h1>
+      <p>Continuous edge inference with YOLO object tracking and neural face recognition.</p>
+    </div>
+    <div class="live-dot pulse">LIVE FEED</div>
+  </div>
+
+  <div class="camera-grid">
+    <div class="panel camera-panel">
+      <div class="panel-head">
+        <h3>◉ Main Stream</h3>
+        <span class="cam-badge" id="cameraStatusBadge">STREAM ONLINE</span>
+      </div>
+      <div class="video-container">
+        <img class="live-feed-video" src="{{ url_for('video_feed') }}" alt="Live AI Camera Feed">
+        <div class="video-overlay-hud">
+          <div class="hud-top">
+            <span class="hud-tag">FPS: <b id="hudFps">28.5</b></span>
+            <span class="hud-tag">RES: <b>1280x720</b></span>
+            <span class="hud-tag rec">● REC</span>
+          </div>
+          <div class="hud-bottom">
+            <span>ENGINE: YOLOv8 + ArcFace CNN</span>
+            <span id="hudTime">2026-11-02</span>
+          </div>
+        </div>
+      </div>
+      <div class="camera-controls">
+        <button type="button" class="gradient-btn" id="takeSnapshotBtn">📸 Capture Snapshot</button>
+        <button type="button" class="outline-btn" id="toggleAiOverlayBtn">⚡ AI Overlay Active</button>
+      </div>
+    </div>
+
+    <div class="panel telemetry-panel">
+      <div class="panel-head">
+        <h3>⌁ Live Telemetry</h3>
+        <span>Diagnostics</span>
+      </div>
+      <div class="telemetry-items">
+        <div class="telemetry-row">
+          <span>Active Camera</span>
+          <b>Main Gate CCTV</b>
+        </div>
+        <div class="telemetry-row">
+          <span>Inference Latency</span>
+          <b class="highlight-cyan">24 ms</b>
+        </div>
+        <div class="telemetry-row">
+          <span>YOLO Confidence Cutoff</span>
+          <b>0.50</b>
+        </div>
+        <div class="telemetry-row">
+          <span>Face Match Threshold</span>
+          <b>0.70</b>
+        </div>
+        <div class="telemetry-row">
+          <span>Database Storage</span>
+          <b class="highlight-teal">Firestore Connected</b>
+        </div>
+      </div>
+      <div class="alert-box">
+        <b>✦ Intelligent Alert Engine</b>
+        <p>Unregistered persons are automatically captured as evidence records.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

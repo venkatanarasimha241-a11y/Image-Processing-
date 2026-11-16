@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Object Database · AI Vision{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="section-title">
+    <div>
+      <span class="eyebrow">RECOGNITION REPOSITORY</span>
+      <h1>Object & Identity Database</h1>
+      <p>Registered persons, biometric face embeddings, and classified object registries.</p>
+    </div>
+    <a href="{{ url_for('persons_page') }}" class="gradient-btn">+ Manage Profiles</a>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h3>◈ Registered Profiles</h3>
+      <span>{{ persons|length }} registered</span>
+    </div>
+    {% if persons %}
+    <div class="objects-grid">
+      {% for p in persons %}
+      <div class="object-card">
+        <div class="card-avatar">
+          <img src="{{ p.get('image_url') or url_for('static', filename='images/default_avatar.svg') }}" alt="{{ p.get('name') }}">
+          <span class="role-tag {{ p.get('role', 'student')|lower }}">{{ p.get('role', 'Member') }}</span>
+        </div>
+        <div class="card-details">
+          <h4>{{ p.get('name') }}</h4>
+          <span class="id-tag">ID: {{ p.get('person_id') or p.get('roll_number') or 'N/A' }}</span>
+          <p>{{ p.get('department', 'General') }}</p>
+          <div class="meta-row">
+            <span>Added: {{ p.get('registered_at', 'Registered') }}</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty big">
+      <span class="radar">◎</span>
+      <b>No registered identities found.</b>
+      <span>Add persons via the Persons management page to populate this repository.</span>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

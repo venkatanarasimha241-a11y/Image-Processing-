@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% block title %}AI Detection · AI Vision{% endblock %}
+{% block public_content %}
+<div class="auth-page">
+ <div class="auth-bg"></div><div class="stars"></div>
+ <header class="auth-brand"><img src="{{url_for('static',filename='images/logo.png')}}" alt="AI Detection logo"><div><b>AI DETECTION</b><span>AI VISION</span></div></header>
+ <div class="auth-tagline">See More. <span>Protect Better.</span></div>
+ <section class="auth-copy">
+   <div class="eyebrow">NEXT GENERATION SURVEILLANCE</div>
+   <h1>AI-Powered<br><span>Image Detection</span></h1>
+   <p>Smarter Vision. Safer Tomorrow.</p>
+   <div class="feature-row">
+    <div class="feature"><i>ϟ</i><span>Real-time<br>Detection</span></div><div class="feature"><i>◉</i><span>Deep Learning<br>Powered</span></div>
+    <div class="feature"><i>♢</i><span>Smart Alerts<br>& Monitoring</span></div><div class="feature"><i>⌁</i><span>Secure &<br>Scalable</span></div>
+   </div>
+   <div class="camera-card"><div class="scanline"></div><span class="det-tag person">Person&nbsp; 0.92</span><span class="det-tag car">Car&nbsp; 0.87</span><div class="camera-lens">◉</div><div class="city-caption">Your Safety<br><b>Our AI Vision</b></div></div>
+ </section>
+ <div class="edge-stickers"><span>♢<b>Secure<br>Access</b></span><span>♧<b>AI Powered<br>Detection</b></span><span>↻<b>24/7<br>Monitoring</b></span></div>
+ <section class="auth-card">
+   <div class="auth-logo"><img src="{{url_for('static',filename='images/logo.png')}}" alt="AI Detection logo"></div>
+   <h2 id="authTitle">Welcome Back</h2><p id="authSub">Sign in to your account to continue</p>
+   <div class="tabs"><button type="button" data-tab="login" class="{% if active_tab|default('login')!='signup' %}active{% endif %}">Login</button><button type="button" data-tab="signup" class="{% if active_tab|default('login')=='signup' %}active{% endif %}">Sign Up</button></div>
+   <form id="loginForm" class="auth-form {% if active_tab|default('login')=='signup' %}hidden{% endif %}" method="post" action="{{url_for('login')}}"><input type="hidden" name="csrf_token" value="{{csrf_token}}">
+     <label>Email address or username<input name="email" type="email" value="{{form_email|default('')}}" placeholder="you@example.com" required autocomplete="email"></label>
+     <label>Password<div class="pass"><input name="password" type="password" placeholder="••••••••" required><button type="button" data-password>◉</button></div></label>
+     <div class="remember"><label><input type="checkbox"> Remember me</label><a href="#" onclick="return false">Secure login</a></div>
+     <button class="gradient-btn" type="submit">Login <span>→</span></button>
+   </form>
+   <form id="signupForm" class="auth-form {% if active_tab|default('login')!='signup' %}hidden{% endif %}" method="post" action="{{url_for('register')}}"><input type="hidden" name="csrf_token" value="{{csrf_token}}">
+     <label>Full name<input name="full_name" value="{{form_name|default('')}}" placeholder="Your full name" required></label>
+     <label>Email<input name="email" type="email" value="{{form_email|default('')}}" placeholder="you@example.com" required autocomplete="email"></label>
+     <label>Password<div class="pass"><input name="password" type="password" placeholder="At least 8 characters" required minlength="8"><button type="button" data-password>◉</button></div></label>
+     <label>Confirm password<input name="confirm_password" type="password" placeholder="Repeat password" required minlength="8"></label>
+     <button class="gradient-btn" type="submit">Create account <span>→</span></button>
+   </form>
+   <div class="auth-foot">Private by design · <b>AI Vision</b> workspace</div>
+ </section>
+ <footer class="auth-footer">AI DETECTION &nbsp; · &nbsp; SMARTER SURVEILLANCE &nbsp; · &nbsp; A SAFER WORLD</footer>
+</div>
+<link rel="stylesheet" href="{{url_for('static',filename='css/auth.css')}}"><script src="{{url_for('static',filename='js/auth.js')}}"></script>
+{% endblock %}

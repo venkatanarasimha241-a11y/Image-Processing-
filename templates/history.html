@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Detection History · AI Vision{% endblock %}
+{% block content %}
+<section class="page">
+  <div class="section-title">
+    <div>
+      <span class="eyebrow">AUDIT & LOGS</span>
+      <h1>Detection History</h1>
+      <p>Timestamped surveillance captures, matched identities, and object detections.</p>
+    </div>
+    <a href="{{ url_for('detections_page') }}" class="outline-btn">Detailed Audit Log →</a>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h3>◷ Detection Records</h3>
+      <span>{{ detections|length }} entries</span>
+    </div>
+    {% if detections %}
+    <div class="history-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Evidence</th>
+            <th>Identity / Object</th>
+            <th>Source</th>
+            <th>Confidence</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in detections %}
+          <tr>
+            <td>{{ d.get('timestamp') or d.get('created_at') or 'Just now' }}</td>
+            <td>
+              <div class="table-thumb">
+                {% if d.get('image_url') %}
+                <img src="{{ d.get('image_url') }}" alt="Evidence">
+                {% elif d.get('filename') %}
+                <img src="{{ url_for('uploaded_file', filename=d.get('filename')) }}" alt="Evidence">
+                {% else %}
+                <span class="no-thumb">◉</span>
+                {% endif %}
+              </div>
+            </td>
+            <td><b>{{ d.get('name') or d.get('class_name') or 'Unknown' }}</b></td>
+            <td>{{ d.get('camera_name') or d.get('source') or 'CCTV Stream' }}</td>
+            <td>
+              <span class="conf-badge">
+                {{ ('%.1f'|format(d.get('confidence', 0) if d.get('confidence', 0) > 1 else d.get('confidence', 0) * 100)) }}%
+              </span>
+            </td>
+            <td>
+              <span class="status-pill {{ 'known' if d.get('status') == 'known' else 'unknown' }}">
+                {{ d.get('status', 'unknown')|upper }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty big">
+      <span class="radar">◎</span>
+      <b>No detection history recorded yet.</b>
+      <span>Upload images in Image Detection or run Live Camera to begin tracking.</span>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

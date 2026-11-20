@@ -237,20 +237,3 @@ http://127.0.0.1:5000
 
 ---
 
-## 💡 Troubleshooting & FAQs
-
-- **Q: What if I don't have a physical webcam connected?**
-  - **A**: The system automatically detects missing hardware and starts the **Intelligent Synthetic Stream**, rendering a live simulation feed complete with animated surveillance targets and timestamps so the full pipeline can be demonstrated anywhere.
-- **Q: Why does the dashboard show "DEMO MODE ACTIVE"?**
-  - **A**: If `serviceAccountKey.json` contains placeholder values, the app activates in-memory local caching for demo and evaluation purposes. Once valid Firebase keys are supplied, it transitions automatically to cloud Firestore.
-- **Q: How to adjust detection cooldown?**
-  - **A**: Set the environment variable `DETECTION_COOLDOWN=10` (in seconds) in your `.env` file or export it in your shell.
-
----
-
-## 🎓 Academic Viva & Presentation Notes
-
-When presenting this project for your B.Tech viva:
-1. **Pipeline Explanation**: Explain how OpenCV captures frames in a dedicated thread to eliminate I/O blocking; the frames are fed into YOLOv8 for spatial bounding-box regression; detected person patches are passed to the recognition engine for feature distance comparison; positive matches trigger a cooldown check before uploading evidence blobs to Firebase.
-2. **Debounce Logic**: Highlight that continuous frame-by-frame database writes would cause 30 writes/sec; the cooldown mechanism caps alerts to 1 event per 5 seconds per subject, optimizing cloud bandwidth and Firestore costs.
-3. **Resilience & Fault Tolerance**: Emphasize that every third-party integration (camera, model weights, cloud DB) includes safe fallbacks preventing application crashes during demonstrations.
